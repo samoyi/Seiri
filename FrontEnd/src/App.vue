@@ -37,7 +37,7 @@ export default {
     height: $HEADER-HEIGHT;
     .center{
         line-height: $HEADER-HEIGHT;
-        font-size: 28px;
+        font-size: 30px;
         font-family: "FangSong";
         color: $BASIC-RED;
     }
