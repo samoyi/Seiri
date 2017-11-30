@@ -2,7 +2,7 @@
     <v-ons-page id="projects">
         <div id="project-list">
             <v-ons-card class="projectCard" v-for="(project,index) in projects" :key="project.id">
-                <img class="project-cover" :class="{noCover: !project.img}" :src="project.img" alt="点击图片图标添加项目封面" style="width: 100%">
+                <img class="project-cover" :class="{noCover: !project.img}" :src="project.img" alt="点击图片图标添加项目封面">
                 <div class="project-name">
                     {{project.name}}
                     <v-ons-icon class="rename" icon="fa-pencil" @click="changeName(index)"></v-ons-icon>
@@ -19,9 +19,12 @@
         </v-ons-card> -->
         <v-ons-bottom-toolbar id="cardForAdd" :class="{expanding: bDisplayAddCard}">
             <v-ons-icon class="closeBtn" v-show="bDisplayAddCard" icon="fa-times" @click="closeAddProject"></v-ons-icon>
-            <p v-show="bDisplayAddCard">输入新的项目名称：最多支持12个汉字及日文字符，或24个英文字符</p>
-            <v-ons-input class="newProjectName" placeholder="项目名称" require v-model="newProject.newProjectName" v-show="bDisplayAddCard"></v-ons-input>
-            <v-ons-button class="newProjectCover" modifier="cta" style="margin: 6px 0" v-show="bDisplayAddCard">封面图片</v-ons-button>
+            <!-- <p v-show="bDisplayAddCard">输入新的项目名称：最多支持12个汉字及日文字符，或24个英文字符</p> -->
+            <input class="newProjectName" v-show="bDisplayAddCard" placeholder="项目名称。最多支持12个汉字及日文字符，或24个英文字符" require float v-model="newProject.newProjectName" />
+            <v-ons-button class="newProjectCover" modifier="cta" style="margin: 6px 0" v-show="bDisplayAddCard">
+                选择封面
+                <input style="background-color: red" type="file" />
+            </v-ons-button>
             <v-ons-button id="addProjectBtn" modifier="large" @click="addProject">{{bDisplayAddCard?'添加':'添加项目'}}</v-ons-button>
         </v-ons-bottom-toolbar>
     </v-ons-page>
@@ -43,7 +46,7 @@ export default {
             projects: [
                 {
                     img: '',
-                    name: '第一个项目',
+                    name: '第三个项目',
                     id: 0
                 },
                 {
@@ -146,8 +149,23 @@ export default {
                 nErrCode = 1;
             }
             return nErrCode;
-        }
-    }
+        },
+        setCoverSize(){ // 图片宽度如果100%会拉伸，就auto
+            let nMaxWidth = window.innerWidth - 16 - 32;
+            let aCover = [...document.querySelectorAll('#project-list .project-cover')];
+            aCover.forEach(cover=>{
+                if(cover.naturalWidth<nMaxWidth){
+                    cover.style.width = 'auto';
+                }
+            })
+        },
+    },
+    mounted(){
+        this.setCoverSize();
+    },
+    updated(){
+        this.setCoverSize();
+    },
 }
 
 function isValidLength(sName, nMax=24){
@@ -169,6 +187,7 @@ function isValidLength(sName, nMax=24){
             .project-cover{
                 color: gray;
                 display: block;
+                width: 100%; margin: auto;
             }
             .noCover{
                 min-height: 50px;
@@ -200,12 +219,17 @@ function isValidLength(sName, nMax=24){
     #cardForAdd{
         min-height: 66px;
         position: fixed; left: 0; bottom: 0; width: 100%;
+        padding: 16px; box-sizing: border-box;
         .closeBtn{
             position: absolute;
             top: 8px; right: 8px;
         }
         .newProjectName, .newProjectCover{
             display: block;
+            width: 100%;
+            border-top: none;
+            border-right: none;
+            border-left: none;
         }
         #addProjectBtn{
             position: absolute; bottom: 10px;
