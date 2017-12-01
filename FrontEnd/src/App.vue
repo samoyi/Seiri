@@ -40,6 +40,7 @@ export default {
         font-size: 30px;
         font-family: "FangSong";
         color: $BASIC-RED;
+        text-align: center;
     }
 }
 

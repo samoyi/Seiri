@@ -19,11 +19,11 @@
         </v-ons-card> -->
         <v-ons-bottom-toolbar id="cardForAdd" :class="{expanding: bDisplayAddCard}">
             <v-ons-icon class="closeBtn" v-show="bDisplayAddCard" icon="fa-times" @click="closeAddProject"></v-ons-icon>
-            <!-- <p v-show="bDisplayAddCard">输入新的项目名称：最多支持12个汉字及日文字符，或24个英文字符</p> -->
-            <input class="newProjectName" v-show="bDisplayAddCard" placeholder="项目名称。最多支持12个汉字及日文字符，或24个英文字符" require float v-model="newProject.newProjectName" />
-            <v-ons-button class="newProjectCover" modifier="cta" style="margin: 6px 0" v-show="bDisplayAddCard">
+            <input class="newProjectName" v-show="bDisplayAddCard" placeholder="项目名称" require float v-model="newProject.newProjectName" />
+            <p v-show="bDisplayAddCard">最多支持12个汉字及日文字符，或24个英文字符</p>
+            <v-ons-button class="newProjectCover" modifier="cta" v-show="bDisplayAddCard">
                 选择封面
-                <input style="background-color: red" type="file" />
+                <input id="selectImage" @change="gotImage" type="file" />
             </v-ons-button>
             <v-ons-button id="addProjectBtn" modifier="large" @click="addProject">{{bDisplayAddCard?'添加':'添加项目'}}</v-ons-button>
         </v-ons-bottom-toolbar>
@@ -150,21 +150,70 @@ export default {
             }
             return nErrCode;
         },
-        setCoverSize(){ // 图片宽度如果100%会拉伸，就auto
+        setCoverSize(aCover){ // 图片宽度如果100%会拉伸，就auto
+            // 必须确保图片加载完，才能获得naturalWidth
             let nMaxWidth = window.innerWidth - 16 - 32;
-            let aCover = [...document.querySelectorAll('#project-list .project-cover')];
             aCover.forEach(cover=>{
+                console.log((cover.naturalWidth +'='+ nMaxWidth));
                 if(cover.naturalWidth<nMaxWidth){
                     cover.style.width = 'auto';
                 }
             })
         },
+        gotImage(ev){
+            let oFile = (ev.target.files)[0];
+            document.querySelector('#selectImage').value = '';
+            if( oFile.type!=="image/jpeg" && oFile.type!=="image/png" && oFile.type!=="image/webp" ) {
+                alert('图片类型只能是jpg或png');
+                return;
+        	}
+
+            // 创建FileReader实例
+        	let reader = new FileReader();
+            reader.addEventListener("load", imageLoadedHandler);
+            reader.readAsDataURL(oFile);
+        		// oImageFile = oFile,
+        		// newImg = {};
+
+        	// 图片load后的处理函数
+        	function imageLoadedHandler(e){
+        		let oPreview = document.createElement('img'),
+                    sDataURL = '';
+
+                oPreview.onload = function(){
+                    // 根据图片大小按照不同比例进行压缩
+                    console.log(oFile.size);
+                    let quality = oFile.size>104857.6 ? 0.92/(oFile.size/104857.6) : 0.92;
+                    sDataURL = compress(oPreview, oFile.type, quality);
+                    console.log(sDataURL);
+            		// if( oImageFile.size>5.24288 ){
+            		// 	var quality = 100/(oImageFile.size/524288);
+            		// 	newImg = compress(oPreview, quality);
+            		// }
+            		// else{
+            		// 	newImg.src = e.target.result;
+            		// }
+                };
+                oPreview.src = e.target.result;
+        	}
+
+            function compress(source_img_node, output_format, quality=0.92){
+            	 let cvs = document.createElement('canvas');
+            	 //naturalWidth真实图片的宽度
+            	 cvs.width = source_img_node.naturalWidth;
+            	 cvs.height = source_img_node.naturalHeight;
+            	 let ctx = cvs.getContext("2d").drawImage(source_img_node, 0, 0);
+                 console.log(output_format, quality);
+            	 return cvs.toDataURL(output_format, quality);
+            }
+
+        },
     },
     mounted(){
-        this.setCoverSize();
-    },
-    updated(){
-        this.setCoverSize();
+        window.onload = ()=>{
+            let aCover = [...document.querySelectorAll('#project-list .project-cover')];
+            this.setCoverSize(aCover);
+        };
     },
 }
 
@@ -231,13 +280,32 @@ function isValidLength(sName, nMax=24){
             border-right: none;
             border-left: none;
         }
+        .newProjectName{
+            height: 2em;
+            margin-top: 14px;
+        }
+        p{
+            font-size: 10px;
+            text-align: left;
+            color: gray;
+            margin-top: 4px;
+        }
+        .newProjectCover{
+            margin: 24px auto 0 auto;
+            width: 120px;
+            #selectImage{
+                width: 100%; height: 100%;
+                position: absolute; top: 0; left: 0;
+                opacity: 0;
+            }
+        }
         #addProjectBtn{
             position: absolute; bottom: 10px;
             width: 80%; left: 10%;
         }
     }
     .expanding{
-        height: 300px;
+        height: 200px;
     }
 }
 
