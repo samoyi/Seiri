@@ -3,30 +3,30 @@
         <ons-toolbar id="header">
             <div class="center">断·舍·离</div>
         </ons-toolbar>
-        <project-card></project-card>
+        <router-view></router-view>
     </div>
 </template>
 
 
 <script>
 
-import projectList from './components/projectList.vue';
+// import projectList from './components/projectList.vue';
 
 export default {
     name: 'app',
-    components: {
-        projectCard: projectList,
-    },
-    data () {
-        return {
-            carouselIndex: 0,
-            items: [
-                'http://placekitten.com/g/300/300',
-                'http://placekitten.com/g/400/400',
-                'http://placekitten.com/g/500/500'
-            ]
-        };
-    }
+    // components: {
+    //     projectCard: projectList,
+    // },
+    // data () {
+    //     return {
+    //         carouselIndex: 0,
+    //         items: [
+    //             'http://placekitten.com/g/300/300',
+    //             'http://placekitten.com/g/400/400',
+    //             'http://placekitten.com/g/500/500'
+    //         ]
+    //     };
+    // }
 }
 </script>
 
@@ -51,4 +51,5 @@ export default {
   text-align: center;
   color: #2c3e50;
 }
+
 </style>
