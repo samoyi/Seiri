@@ -51,7 +51,7 @@
 
 <script>
 
-import MB from '../js/MultiByte.js';
+// import MB from '../js/MultiByte.js';
 import MyUtil from '../js/MyUtil.js';
 import imageCompress from '../js/frontEndImageCompress.js';
 
