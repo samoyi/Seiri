@@ -15,28 +15,42 @@
 
 <template>
     <v-ons-page>
-        <v-ons-search-input placeholder="关键词搜索物品"></v-ons-search-input>
-        <v-ons-button modifier="large" style="margin: 6px 0" @click="addCata">添加分类</v-ons-button>
+        <v-ons-toolbar>
+            <input type="text" class="search-input" placeholder="关键词搜索物品" />
+            <input type="button" class="addCata" value="添加分类" @click="addCata" />
+        </v-ons-toolbar>
         <v-ons-list>
             <ul>
                 <li v-for="(cata,key) in catas" :key="key">
                     <v-ons-list-header>
                         {{key}}
+                        <v-ons-icon v-show="cata.folded" class="caret-up" icon="fa-caret-up" @click="unfold(key)"></v-ons-icon>
+                        <v-ons-icon v-show="!cata.folded" class="caret-down" icon="fa-caret-down" @click="fold(key)"></v-ons-icon>
                         <v-ons-icon class="rename" icon="fa-pencil" @click="changeName(key)"></v-ons-icon>
                         <v-ons-icon class="deleteBtn" icon="fa-trash-o" @click="deleteProject(key)"></v-ons-icon>
                     </v-ons-list-header>
-                    <v-ons-list-item v-for="item in cata" :key="item.name">
-                        <div class="left">
-                            <img class="list-item__thumbnail" :src="item.img" @click="showLargeImage(item.img)" alt="item.name">
-                        </div>
-                        <div class="center">
-                            <span class="list-item__title">{{item.name}}</span><span class="list-item__subtitle">{{item.des}}</span>
-                        </div>
-                    </v-ons-list-item>
+                    <div :class="{folded: cata.folded}">
+                        <v-ons-list-item v-for="(item, index) in cata.items" :key="item.name">
+                            <div class="left">
+                                <img class="list-item__thumbnail" :src="item.img" @click="showLargeImage(item.img)" alt="item.name">
+                            </div>
+                            <div class="center">
+                                <span class="list-item__title">{{item.name}}</span><span class="list-item__subtitle">{{item.des}}</span>
+                            </div>
+                            <v-ons-icon class="edit-item" icon="fa-pencil-square-o" @click="editItem(key, index)"></v-ons-icon>
+                        </v-ons-list-item>
+                    </div>
                 </li>
             </ul>
         </v-ons-list>
-
+        <edit-card
+            v-bind="oEditCardProp"
+            v-on:closeCard="closeCard"
+            v-on:submit="submitEdit">
+            <select v-model="newCata">
+                <option v-for="(cata, key) in catas" :selected="key===currentCata" :value="key">{{key}}</option>
+            </select>
+        </edit-card>
         <div id="largeImageFrame" v-show="bDisplayLargeImage" @click="hideLargeImage">
             <img id="largeImage" src="" alt="断·舍·离" />
         </div>
@@ -57,8 +71,12 @@ import MyUtil from '../js/MyUtil.js';
 // let oProjects = null; // mouted之后，选择该节点
 let oLargeImage = null;
 
+import editCard from './editCard.vue';
 
 export default {
+    components: {
+        'edit-card': editCard,
+    },
     data () {
         return {
             // nNextID: 4, // 新添加项目的ID
@@ -66,54 +84,78 @@ export default {
             // newProject: {
             //     newProjectName: '',
             // },
+
             catas: { // 当前的项目列表
-                'cata1': [
-                    {
-                        img: './upload/images/projectCover/0.png',
-                        name: '第一个项目',
-                        des: '描述0',
-                    },
-                    {
-                        img: './upload/images/projectCover/0.png',
-                        name: '立春雨水惊蛰春分清明谷雨',
-                        des: '描述1',
-                    },
-                    {
-                        img: './upload/images/projectCover/1.png',
-                        name: 'aaaaaaaaaaaaaaaaaaaaaaaa',
-                        des: '描述2',
-                    },
-                    {
-                        img: './upload/images/projectCover/2.jpg',
-                        name: 'はははははははははははは',
-                        des: '描述3',
-                    },
-                ],
-                'cata2': [
-                    {
-                        img: './upload/images/projectCover/0.png',
-                        name: '第二个项目',
-                        des: '描述0',
-                    },
-                    {
-                        img: './upload/images/projectCover/0.png',
-                        name: '立春雨水惊蛰春分清明谷雨',
-                        des: '描述1',
-                    },
-                ],
-                'cata3': [
-                    {
-                        img: './upload/images/projectCover/0.png',
-                        name: '第三个项目',
-                        des: '描述0',
-                    },
-                    {
-                        img: './upload/images/projectCover/2.jpg',
-                        name: 'はははははははははははは',
-                        des: '描述3',
-                    },
-                ],
+                'cata1': {
+                    folded: false,
+                    items: [
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第一个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '立春雨水惊蛰春分清明谷雨',
+                            des: '描述1',
+                        },
+                        {
+                            img: './upload/images/projectCover/1.png',
+                            name: 'aaaaaaaaaaaaaaaaaaaaaaaa',
+                            des: '描述2',
+                        },
+                        {
+                            img: './upload/images/projectCover/2.jpg',
+                            name: 'はははははははははははは',
+                            des: '描述3',
+                        },
+                    ]
+                },
+                'cata2': {
+                    folded: true,
+                    items: [
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '立春雨水惊蛰春分清明谷雨',
+                            des: '描述1',
+                        },
+                    ]
+                },
+                'cata3': {
+                    folded: true,
+                    items: [
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第三个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/2.jpg',
+                            name: 'はははははははははははは',
+                            des: '描述3',
+                        },
+                    ]
+                },
             },
+
+            oEditCardProp: {
+                bDisplay: false,
+                newName: '',
+                namePlaceholder: '条目名称',
+                newDes: '',
+                desPlaceholder: '条目描述',
+                tip: '条目名称最多支持12个汉字及日文字符，或24个英文字符',
+                updateTip: '选择图片',
+                initButtonText: '修改',
+                submitButtonText: '修改',
+            },
+            currentCata: '', // 条目当前类别。用于修改类别
+            newCata: '', // 条目修改后的类别
 
             // 等待动画是否出现
             bWaiting: false,
@@ -175,7 +217,46 @@ export default {
                 this.bDisplayLargeImage = false;
             }
         },
+        unfold(key){
+            this.catas[key].folded = false;
+        },
+        fold(key){
+            this.catas[key].folded = true;
+        },
+        editItem(key, index){
+            let item = this.catas[key].items[index];
+            this.currentCata = key;
+            this.newCata = key;
 
+            this.oEditCardProp.newName = item.name;
+            this.oEditCardProp.newDes = item.des;
+            console.log(this.oEditCardProp.newName);
+            console.log(this.oEditCardProp.newDes);
+            this.oEditCardProp.bDisplay = true;
+        },
+        submitEdit(newData){
+            if(false){// 没有修改名称
+                // 两个维度四个情况
+                // 改类别改名      检查重名
+                // 改类别没改名    检查重名
+                // 没改类别改名    检查重名
+                // 没改类别没改名  不能检查重名
+
+            }
+            else{
+                // console.log(this.newCata)
+                // console.log(this.catas[this.newCata])
+                // let aNamesInTargetCata = this.catas[this.newCata]
+                //                          .items.map(item=>item.name);
+                // if(aNamesInTargetCata.includes(this.oEditCardProp.newName)){
+                //     alert(this.newCata + ' 类别中已经存在名为 '
+                //           + this.oEditCardProp.newName + ' 的条目')
+                // }
+            }
+        },
+        closeCard(){
+            this.oEditCardProp.bDisplay = false;
+        },
         // addProject(){
         //     // 当this.bDisplayAddCard为false时，表示没有处于添加项目状态，点击按钮则添加项目窗口出现
         //     // 当this.bDisplayAddCard为true时，表示当前处于添加项目状态，点击按钮则进行实际的数据添加
@@ -326,19 +407,58 @@ function isValidLength(sName, nMax=24){
 <style scoped lang="scss">
 @import "../scss/common.scss";
 
-
 ons-page{
     top: $HEADER-HEIGHT;
+
+    ons-toolbar{
+        .search-input{
+            position: absolute;
+            top: 0; bottom: 0; margin: auto;
+            width: 12em; height: 28px;
+            left: 14px;
+        }
+        .addCata{
+            height: 28px;
+            line-height: 28px;
+            width: 6em;
+            position: absolute;
+            right: 14px;
+            top: 0;
+            bottom: 0;
+            margin: auto;
+            padding: 0;
+            background-color: #0076ff;
+            border: 0 solid currentColor;
+            border-radius: 3px;
+            transition: none;
+            box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 1px 5px 0 rgba(0, 0, 0, .12), 0 3px 1px -2px rgba(0, 0, 0, .2);
+            color: white;
+        }
+    }
     ons-list{
         background-color: transparent;
         >ul{
             >li{
-                margin-bottom: 22px;
+                // margin-bottom: 22px;
                 padding: 10px 0;
                 ons-list-header{
                     font-size: 18px;
                     color: $BASIC-RED;
                     background-color: #ccc;
+                    .caret-up, .caret-down{
+                        position: absolute; margin: auto;
+                        top: 0; right: 0; bottom: 0; left: 0;
+                        text-align: center;
+                        width: 18px; height: 12px;
+                    }
+                    .caret-up::before, .caret-down::before{
+                        top: -6px;
+                        position: absolute;
+                        left: 0;
+                        display: block;
+                        height: 100%;
+                        width: 100%;
+                    }
                     .rename{
                         font-size: 14px;
                     }
@@ -350,17 +470,29 @@ ons-page{
                         right: 8px;
                     }
                 }
-                ons-list-item{
+                >div{
+                    overflow: hidden;
+                    ons-list-item{
                         margin-bottom: 6px;
-                    .center{
-                        padding: 2px 8px;
-                        .list-item__title{
-                            font-size: 14px;
+                        .center{
+                            padding: 2px 8px;
+                            .list-item__title{
+                                font-size: 14px;
+                            }
+                            .list-item__subtitle{
+                                font-size: 12px;
+                            }
                         }
-                        .list-item__subtitle{
-                            font-size: 12px;
+                        .edit-item{
+                            font-size: 14px;
+                            color: $BASIC-RED;
+                            position: absolute;
+                            right: 24px;
                         }
                     }
+                }
+                .folded{
+                    height: 0;
                 }
             }
         }
