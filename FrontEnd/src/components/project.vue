@@ -42,11 +42,13 @@
                     </div>
                 </li>
             </ul>
+            <div class="mat" v-show="oEditCardProp.bDisplay"></div>
         </v-ons-list>
         <edit-card
             v-bind="oEditCardProp"
-            v-on:closeCard="closeCard"
-            v-on:submit="submitEdit">
+            v-on:ec-closeCard="closeCard"
+            v-on:ec-submit="submitEdit"
+            v-on:ec-display="displayEditCard">
             <select v-model="newCata">
                 <option v-for="(cata, key) in catas" :selected="key===currentCata" :value="key">{{key}}</option>
             </select>
@@ -145,16 +147,18 @@ export default {
 
             oEditCardProp: {
                 bDisplay: false,
-                newName: '',
+                bBtnDisplay: false,
+                curName: '',
                 namePlaceholder: '条目名称',
-                newDes: '',
+                curDes: '',
                 desPlaceholder: '条目描述',
                 tip: '条目名称最多支持12个汉字及日文字符，或24个英文字符',
                 updateTip: '选择图片',
                 initButtonText: '修改',
-                submitButtonText: '修改',
+                submitButtonText: '提交修改',
             },
             currentCata: '', // 条目当前类别。用于修改类别
+            indexInCurrentCata: '', // 条目在当前类别中的index。用于移动类别时删除原条目
             newCata: '', // 条目修改后的类别
 
             // 等待动画是否出现
@@ -226,33 +230,66 @@ export default {
         editItem(key, index){
             let item = this.catas[key].items[index];
             this.currentCata = key;
+            this.indexInCurrentCata = index;
             this.newCata = key;
 
-            this.oEditCardProp.newName = item.name;
-            this.oEditCardProp.newDes = item.des;
-            console.log(this.oEditCardProp.newName);
-            console.log(this.oEditCardProp.newDes);
+            // this.oEditCardProp.curCata = key;
+            this.oEditCardProp.curName = item.name;
+            this.oEditCardProp.curDes = item.des;
             this.oEditCardProp.bDisplay = true;
         },
         submitEdit(newData){
-            if(false){// 没有修改名称
-                // 两个维度四个情况
-                // 改类别改名      检查重名
-                // 改类别没改名    检查重名
-                // 没改类别改名    检查重名
-                // 没改类别没改名  不能检查重名
+            // 两个维度四个情况
+            // 改类别改名      检查重名       在新类别中检查
+            // 改类别没改名    检查重名       在新类别中检查
+            // 没改类别改名    检查重名       当前类别中检查
+            // 没改类别没改名  不能检查重名
+            console.log(newData.img);
+            if(this.currentCata!==this.newCata){ // 改类别
+                // 在新类别中检查重名
+                let bDuplicate = this.catas[this.newCata].items.some(val=>{
+                    return val.name === newData.name;
+                });
+                if(bDuplicate){
+                    alert(this.newCata + ' 类别中已存在名为 ' + newData.name + ' 条目');
+                    return;
+                }
+                this.catas[this.newCata].items.push({
+                    img: './upload/images/projectCover/0.png',
+                    name: newData.name,
+                    des: newData.des,
+                });
+                this.catas[this.currentCata].items.splice(this.indexInCurrentCata, 1);
 
             }
-            else{
-                // console.log(this.newCata)
-                // console.log(this.catas[this.newCata])
-                // let aNamesInTargetCata = this.catas[this.newCata]
-                //                          .items.map(item=>item.name);
-                // if(aNamesInTargetCata.includes(this.oEditCardProp.newName)){
-                //     alert(this.newCata + ' 类别中已经存在名为 '
-                //           + this.oEditCardProp.newName + ' 的条目')
-                // }
+            else if(newData.name!==this.oEditCardProp.curName){ // 没改类别改名了
+                // 当前类别中检查重名
+                let bDuplicate = this.catas[this.currentCata].items.some(val=>{
+                    return val.name === newData.name;
+                });
+                if(bDuplicate){
+                    alert('当前类别中已存在名为 ' + newData.name + ' 条目');
+                    return;
+                }
+                this.catas[this.currentCata].items.
+                            splice(this.indexInCurrentCata, 1, {
+                                img: './upload/images/projectCover/0.png',
+                                name: newData.name,
+                                des: newData.des,
+                            });
             }
+            else{ // 没改类别没改名
+                this.catas[this.currentCata].items.
+                            splice(this.indexInCurrentCata, 1, {
+                                img: './upload/images/projectCover/0.png',
+                                name: this.oEditCardProp.curName,
+                                des: newData.des,
+                                img: newData.img,
+                            });
+            }
+        },
+        displayEditCard(){
+            this.oEditCardProp.bDisplay = true;
         },
         closeCard(){
             this.oEditCardProp.bDisplay = false;
@@ -402,6 +439,9 @@ function isValidLength(sName, nMax=24){
     return (sLen-nAsciiNum)*2 + nAsciiNum <= nMax;
 }
 
+
+
+
 </script>
 
 <style scoped lang="scss">
@@ -495,6 +535,9 @@ ons-page{
                     height: 0;
                 }
             }
+        }
+        .mat{
+            height: $EDIT-CARD-HEIGHT;
         }
     }
 

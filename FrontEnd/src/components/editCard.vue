@@ -1,16 +1,38 @@
+<!--
+# 通用的编辑框组件
+## 该组件功能：
+    * 编辑名称
+    * 编辑描述
+    * 编辑图片
+    * 通过slot插入其他编辑项
 
+## 两种初始模式
+* bBtnDisplay为true时，编辑按钮显示，点击后bDisplay变为true，出现编辑框，编辑按钮变成提
+                      交按钮
+* bBtnDisplay为false时，什么都不显示，bDisplay变为true时，出现编辑框
+
+## 自定义值：
+* 通过namePlaceholder和newName可以给名称编辑框设定placeholder和初始value，如果都不指
+  定，编辑框不显示。
+* 通过desPlaceholder和newDes可以给名称编辑框设定placeholder和初始value，如果都不指定，
+  编辑框不显示。
+* 通过tip设定一段说明文字
+* updateTip设定上传图片按钮的文字
+* initButtonText为编辑框未出现时按钮的文字，submitButtonText为编辑框出现后的按钮文字
+
+ -->
 <template>
-    <v-ons-bottom-toolbar v-show="bDisplay" id="editCard" :class="{expanding: bDisplay}">
-        <v-ons-icon class="closeBtn" icon="fa-times" @click="closeCard"></v-ons-icon>
-        <input class="newName" v-show="namePlaceholder || newName" :placeholder="namePlaceholder" require float v-model="newData.name" />
-        <input class="newDes" v-show="desPlaceholder || newDes" :placeholder="desPlaceholder" require float v-model="newData.des" />
-        <p>{{tip}}</p>
-        <slot></slot>
+    <v-ons-bottom-toolbar v-show="bBtnDisplay || bDisplay" id="editCard" :class="{expanding: bDisplay}">
+        <v-ons-icon class="closeBtn" v-show="bDisplay" icon="fa-times" @click="closeCard"></v-ons-icon>
+        <input class="newName" v-show="bDisplay && (namePlaceholder || curName)" :placeholder="namePlaceholder" require float v-model.trim="newData.name" />
+        <input class="newDes" v-show="bDisplay && (desPlaceholder || curDes)" :placeholder="desPlaceholder" require float v-model.trim="newData.des" />
+        <p v-show="bDisplay">{{tip}}</p>
+        <slot v-show="bDisplay"></slot>
         <v-ons-button class="newImage" modifier="cta" v-show="bDisplay">
             {{updateTip}}
-            <input class="selectImage" @change="handleNewCover" type="file" />
+            <input class="selectImage" @change="handleChangeCover" type="file" />
         </v-ons-button>
-        <v-ons-button id="submit" modifier="large" @click="submit">{{bDisplay?initButtonText:submitButtonText}}</v-ons-button>
+        <v-ons-button id="submit" v-show="bBtnDisplay || bDisplay" modifier="large" @click="submit">{{bDisplay?submitButtonText:initButtonText}}</v-ons-button>
     </v-ons-bottom-toolbar>
 </template>
 
@@ -27,9 +49,14 @@ export default {
             type: Boolean,
             default: false,
         },
-        newName: String,
+        bBtnDisplay: {
+            type: Boolean,
+            default: false,
+        },
+        curCata: String,
+        curName: String,
         namePlaceholder: String,
-        newDes: String,
+        curDes: String,
         desPlaceholder: String,
         tip: String,
         updateTip: String,
@@ -39,8 +66,10 @@ export default {
     data () {
         return {
             newData: {
-                name: this.newName,
-                des: this.newDes,
+                cata: '',
+                name: '',
+                des: '',
+                img: '',
             },
             selectedImage: null, // 上传项目封面时，表单选择的图片
             compressedCover: null, // 表单选择的图片经过压缩之后的blob对象
@@ -48,10 +77,15 @@ export default {
     },
     methods:{
         closeCard(){
-            this.$emit('closeCard');
+            this.$emit('ec-closeCard');
         },
         submit(){
-            this.$emit('submit', this.newData);
+            if(this.bDisplay){
+                this.$emit('ec-submit', this.newData);
+            }
+            else{
+                this.$emit('ec-display');
+            }
         },
         checkProjectName(sName, index){
             let nErrCode = 0;
@@ -90,15 +124,16 @@ export default {
                 }
             })
         },
-        handleChangeCover(index, ev){
+        handleChangeCover(ev){
             let oUploadedImage = (ev.target.files)[0];
             if(oUploadedImage){ // 如果为false则是用户取消了上传
                 this.handleImage(oUploadedImage, blob=>{
-                    let oCoverNode = oProjects.querySelectorAll('#project-list .projectCard')[index].querySelector('img');
-                    oCoverNode.onload = ()=>{
-                        this.setCoverSize([oCoverNode]);
-                    };
-                    this.projects[index].img = URL.createObjectURL(blob);
+                    // let oCoverNode = oProjects.querySelectorAll('#project-list .projectCard')[index].querySelector('img');
+                    // oCoverNode.onload = ()=>{
+                    //     this.setCoverSize([oCoverNode]);
+                    // };
+                    // this.projects[index].img = URL.createObjectURL(blob);
+                    this.newData.img = URL.createObjectURL(blob);
                 });
             }
         },
@@ -128,16 +163,20 @@ export default {
             });
         },
     },
+    watch: {
+        curName(sName){
+            console.log(sName);
+            this.newData.name = sName;
+        },
+        curDes(sDes){
+            this.newData.des = sDes;
+        },
+    },
     mounted(){
-        console.log('mounted: ' + this.newName, this.newDes);
-        console.log('mounted: ' + this.newData.name, this.newData.des);
+
     },
     updated(){
-        alert('this.newName更新的时候为什么this.newData.name不更新');
-        console.log('updated: ' + this.newName, this.newDes);
-        setTimeout(()=>{
-            console.log('updated 2000: ' + this.newData.name, this.newData.des);
-        }, 2000);
+        // console.log(this.curName);
     },
 }
 
