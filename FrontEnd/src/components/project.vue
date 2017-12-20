@@ -16,28 +16,53 @@
 <template>
     <v-ons-page>
         <v-ons-toolbar>
-            <input type="text" class="search-input" placeholder="关键词搜索物品" />
-            <input type="button" class="addCata" value="添加分类" @click="addCata" />
+            <input type="text" class="search-input"
+                    placeholder="关键词搜索物品" />
+            <input type="button" class="addCata" value="添加分类"
+                    @click="addCata" />
         </v-ons-toolbar>
         <v-ons-list>
             <ul>
                 <li v-for="(cata,key) in catas" :key="key">
                     <v-ons-list-header>
                         {{key}}
-                        <v-ons-icon v-show="cata.folded" class="caret-up" icon="fa-caret-up" @click="unfold(key)"></v-ons-icon>
-                        <v-ons-icon v-show="!cata.folded" class="caret-down" icon="fa-caret-down" @click="fold(key)"></v-ons-icon>
-                        <v-ons-icon class="rename" icon="fa-pencil" @click="changeName(key)"></v-ons-icon>
-                        <v-ons-icon class="deleteBtn" icon="fa-trash-o" @click="deleteProject(key)"></v-ons-icon>
+                        <v-ons-icon v-show="cata.folded" class="caret-up"
+                                icon="fa-caret-up" @click="unfold(key)">
+                        </v-ons-icon>
+                        <v-ons-icon v-show="!cata.folded" class="caret-down"
+                                icon="fa-caret-down" @click="fold(key)">
+                        </v-ons-icon>
+                        <v-ons-icon class="rename" icon="fa-pencil"
+                                @click="changeName(key)">
+                        </v-ons-icon>
+                        <v-ons-icon class="addItem" icon="fa-plus"
+                                @click="">
+                        </v-ons-icon>
+                        <v-ons-icon class="deleteBtn" icon="fa-trash-o"
+                                @click="deleteProject(key)">
+                        </v-ons-icon>
                     </v-ons-list-header>
                     <div :class="{folded: cata.folded}">
-                        <v-ons-list-item v-for="(item, index) in cata.items" :key="item.name">
+                        <v-ons-list-item v-for="(item, index) in cata.items"
+                                :key="item.name">
                             <div class="left">
-                                <img class="list-item__thumbnail" :src="item.img" @click="showLargeImage(item.img)" alt="item.name">
+                                <img class="list-item__thumbnail"
+                                        :src="item.img"
+                                        @click="showLargeImage(item.img)"
+                                        alt="item.name">
                             </div>
                             <div class="center">
-                                <span class="list-item__title">{{item.name}}</span><span class="list-item__subtitle">{{item.des}}</span>
+                                <span class="list-item__title">
+                                    {{item.name}}
+                                </span>
+                                <span class="list-item__subtitle">
+                                    {{item.des}}
+                                </span>
                             </div>
-                            <v-ons-icon class="edit-item" icon="fa-pencil-square-o" @click="editItem(key, index)"></v-ons-icon>
+                            <v-ons-icon class="edit-item"
+                                    icon="fa-pencil-square-o"
+                                    @click="editItem(key, index)">
+                            </v-ons-icon>
                         </v-ons-list-item>
                     </div>
                 </li>
@@ -50,10 +75,14 @@
             v-on:ec-submit="submitEdit"
             v-on:ec-display="displayEditCard">
             <select v-model="newCata">
-                <option v-for="(cata, key) in catas" :selected="key===currentCata" :value="key">{{key}}</option>
+                <option v-for="(cata, key) in catas"
+                        :selected="key===currentCata" :value="key">
+                    {{key}}
+                </option>
             </select>
         </edit-card>
-        <div id="largeImageFrame" v-show="bDisplayLargeImage" @click="hideLargeImage">
+        <div id="largeImageFrame" v-show="bDisplayLargeImage"
+                @click="hideLargeImage">
             <img id="largeImage" src="" alt="断·舍·离" />
         </div>
         <!-- <div id="waiting" v-show="bWaiting">
@@ -150,15 +179,22 @@ export default {
                 bBtnDisplay: false,
                 curName: '',
                 namePlaceholder: '条目名称',
+                maxNameLength: 16, // 16个文英字符的长度，等效于8个中文字符的长度
                 curDes: '',
                 desPlaceholder: '条目描述',
-                tip: '条目名称最多支持12个汉字及日文字符，或24个英文字符',
+                maxDesLength: 32, // 32个英文字符长度，等效于16个中文字符的长度
+                tip: '条目名称最多支持8个汉字及日文字符，或16个英文字符；<br />'
+                    +'条目描述最多支持16个汉字及日文字符，或32个英文字符；<br />'
+                    +'图片支持jpg、png和webp，最大不超过2BM',
                 updateTip: '选择图片',
+                imageMIMEType: ['image/jpeg', 'image/png', 'image/webp'],
+                imageMaxBtype: 2*1024*1024,
                 initButtonText: '修改',
                 submitButtonText: '提交修改',
             },
             currentCata: '', // 条目当前类别。用于修改类别
             indexInCurrentCata: '', // 条目在当前类别中的index。用于移动类别时删除原条目
+            currentImg: '',  // 条目当前类别。用于修改类别时没有更新图片的情况
             newCata: '', // 条目修改后的类别
 
             // 等待动画是否出现
@@ -169,7 +205,8 @@ export default {
     },
     methods:{
         addCata(){
-            let sNewName = prompt('输入新的类别名称：\n最多支持12个汉字及日文字符，或24个英文字符');
+            let sNewName = prompt('输入新的类别名称：'
+                                + '\n最多支持12个汉字及日文字符，或24个英文字符');
             if(sNewName && sNewName.trim()){
                let nResult = this.checkCataName(sNewName);
                console.log(nResult)
@@ -185,7 +222,8 @@ export default {
             }
         },
         changeName(currentName){
-            let sNewName = prompt('输入新的项目名称：\n最多支持12个汉字及日文字符，或24个英文字符');
+            let sNewName = prompt('输入新的项目名称：'
+                                + '\n最多支持12个汉字及日文字符，或24个英文字符');
             if(sNewName && sNewName.trim()){
                 let nResult = this.checkCataName(sNewName, currentName);
                 if(nResult===0){
@@ -231,6 +269,7 @@ export default {
             let item = this.catas[key].items[index];
             this.currentCata = key;
             this.indexInCurrentCata = index;
+            this.currentImg = item.img;
             this.newCata = key;
 
             // this.oEditCardProp.curCata = key;
@@ -244,22 +283,26 @@ export default {
             // 改类别没改名    检查重名       在新类别中检查
             // 没改类别改名    检查重名       当前类别中检查
             // 没改类别没改名  不能检查重名
-            console.log(newData.img);
             if(this.currentCata!==this.newCata){ // 改类别
                 // 在新类别中检查重名
                 let bDuplicate = this.catas[this.newCata].items.some(val=>{
                     return val.name === newData.name;
                 });
                 if(bDuplicate){
-                    alert(this.newCata + ' 类别中已存在名为 ' + newData.name + ' 条目');
+                    alert(this.newCata + ' 类别中已存在名为 '
+                        + newData.name + ' 条目');
                     return;
                 }
                 this.catas[this.newCata].items.push({
-                    img: './upload/images/projectCover/0.png',
+                    img: newData.img || this.currentImg,
                     name: newData.name,
                     des: newData.des,
                 });
-                this.catas[this.currentCata].items.splice(this.indexInCurrentCata, 1);
+
+                this.catas[this.currentCata].items.
+                    splice(this.indexInCurrentCata, 1);
+
+                this.oEditCardProp.bDisplay = false;
 
             }
             else if(newData.name!==this.oEditCardProp.curName){ // 没改类别改名了
@@ -271,21 +314,23 @@ export default {
                     alert('当前类别中已存在名为 ' + newData.name + ' 条目');
                     return;
                 }
-                this.catas[this.currentCata].items.
-                            splice(this.indexInCurrentCata, 1, {
-                                img: './upload/images/projectCover/0.png',
-                                name: newData.name,
-                                des: newData.des,
-                            });
+
+                let item = this.catas[this.currentCata].
+                                items[this.indexInCurrentCata];
+                item.name = newData.name;
+                item.des = newData.des;
+                newData.img && (item.img=newData.img);
+
+                this.oEditCardProp.bDisplay = false;
             }
             else{ // 没改类别没改名
-                this.catas[this.currentCata].items.
-                            splice(this.indexInCurrentCata, 1, {
-                                img: './upload/images/projectCover/0.png',
-                                name: this.oEditCardProp.curName,
-                                des: newData.des,
-                                img: newData.img,
-                            });
+                let item = this.catas[this.currentCata].
+                                items[this.indexInCurrentCata];
+                item.name = this.oEditCardProp.curName;
+                item.des = newData.des;
+                newData.img && (item.img=newData.img);
+
+                this.oEditCardProp.bDisplay = false;
             }
         },
         displayEditCard(){
@@ -471,7 +516,9 @@ ons-page{
             border: 0 solid currentColor;
             border-radius: 3px;
             transition: none;
-            box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 1px 5px 0 rgba(0, 0, 0, .12), 0 3px 1px -2px rgba(0, 0, 0, .2);
+            box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14),
+                        0 1px 5px 0 rgba(0, 0, 0, .12),
+                        0 3px 1px -2px rgba(0, 0, 0, .2);
             color: white;
         }
     }
@@ -538,6 +585,12 @@ ons-page{
         }
         .mat{
             height: $EDIT-CARD-HEIGHT;
+        }
+    }
+
+    .bottom-bar{
+        select{
+            margin-top: 12px;
         }
     }
 
