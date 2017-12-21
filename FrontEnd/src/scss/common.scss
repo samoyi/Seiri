@@ -18,10 +18,6 @@ a {text-decoration: none;}
 
 
 
-// OnsenUI reset
-ons-list-header{
-    text-transform: none;
-}
 
 
 
@@ -32,3 +28,40 @@ $BASIC-RED: #CB1B45;
 $HEADER-HEIGHT: 60px;
 
 $EDIT-CARD-HEIGHT: 320px;
+
+
+// OnsenUI reset
+ons-list-header{
+    text-transform: none;
+}
+
+
+// mixin
+@mixin absCenter{
+    position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+    margin: auto;
+}
+@mixin absHoriCenter{
+    position: absolute; right: 0; left: 0;
+    margin-right: auto;
+    margin-left: auto;
+}
+@mixin absVerCenter{
+    position: absolute; top: 0; bottom: 0;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+@mixin fixedCenter{
+    position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+    margin: auto;
+}
+@mixin fixedHoriCenter{
+    position: fixed; right: 0; left: 0;
+    margin-right: auto;
+    margin-left: auto;
+}
+@mixin fixedVerCenter{
+    position: fixed; top: 0; bottom: 0;
+    margin-top: auto;
+    margin-bottom: auto;
+}

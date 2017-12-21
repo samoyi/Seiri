@@ -368,7 +368,7 @@ function isValidLength(sName, nMax=24){
         background-color: rgba(0, 0, 0, 0.7);
         img{
             display: block; width: 100px;
-            position: absolute; top: 0; right: 0; bottom: 0; left: 0; margin: auto;
+            @include absCenter;
         }
     }
 }

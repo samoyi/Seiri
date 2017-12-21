@@ -39,6 +39,7 @@
                 v-model.trim="newData.des" />
         <p v-show="bDisplay" v-html="tip"></p>
         <slot v-show="bDisplay"></slot>
+        <img id="thumbnail" :src="newData.img" v-show="newData.img"/>
         <v-ons-button class="newImage" modifier="cta" v-show="bDisplay">
             {{updateTip}}
             <input class="selectImage" @change="handleImageUpload" type="file" />
@@ -47,6 +48,10 @@
                 modifier="large"
                 @click="submit">{{bDisplay?submitButtonText:initButtonText}}
         </v-ons-button>
+
+        <div id="waiting" v-show="bWaiting">
+            <img src="../assets/waiting.gif" alt="断·舍·离" />
+        </div>
     </v-ons-bottom-toolbar>
 </template>
 
@@ -95,8 +100,9 @@ export default {
                 des: '',
                 img: '',
             },
-            selectedImage: null, // 上传项目封面时，表单选择的图片
-            compressedCover: null, // 表单选择的图片经过压缩之后的blob对象
+            // selectedImage: null, // 上传项目封面时，表单选择的图片
+            // compressedCover: null, // 表单选择的图片经过压缩之后的blob对象
+            bWaiting: false, // 如果为true，则显示等待动画
         };
     },
     methods:{
@@ -105,6 +111,10 @@ export default {
         },
         submit(){
             if(this.bDisplay){
+                if(!this.newData.name){
+                    return;
+                }
+
                 if( this.maxNameLength
                     &&
                     !isValidLength(this.newData.name, this.maxNameLength)
@@ -112,6 +122,7 @@ export default {
                     alert('“' +this.newData.name+ '”' + ' 长度超出限制');
                     return;
                 }
+
                 if( this.maxDesLength
                     &&
                     !isValidLength(this.newData.des, this.maxDesLength)
@@ -119,6 +130,7 @@ export default {
                     alert('“' +this.newData.des+ '”' + ' 长度超出限制');
                     return;
                 }
+
                 this.$emit('ec-submit', this.newData);
                 // 提交后清空图片数据，以免下一次修改时如果没有上传图片，还会继续使用这
                 // 次的图片
@@ -158,6 +170,7 @@ export default {
                             return ext==='jpeg'?'jpg':ext;
                         })
                     );
+                    this.bWaiting = false;
                     return;
                 }
                 else if(nErrCode===2){
@@ -174,6 +187,7 @@ export default {
     },
     watch: {
         curName(sName){
+            console.log(sName);
             this.newData.name = sName;
         },
         curDes(sDes){
@@ -225,19 +239,33 @@ function isValidLength(sName, nMax){
             color: gray;
             margin-top: 4px;
         }
+        #thumbnail{
+            max-width: 80px; max-height: 40px;
+            position: absolute; bottom: 70px; left: 40px;
+        }
         .newImage{
             width: 120px;
-            position: absolute;
-            right: 0; bottom: 70px; left: 0; margin: auto;
+            @include absHoriCenter;
+            bottom: 70px;
             .selectImage{
                 width: 100%; height: 100%;
-                position: absolute; top: 0; left: 0;
+                @include absHoriCenter;
                 opacity: 0;
             }
         }
         #submit{
             position: absolute; bottom: 10px;
             width: 80%; left: 10%;
+        }
+        #waiting{
+            width: 100%; height: 100%;
+            position: fixed; top: 0; left: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            img{
+                display: block; width: 100px;
+                @include absCenter;
+            }
+
         }
     }
     .expanding{

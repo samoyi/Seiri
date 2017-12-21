@@ -36,7 +36,7 @@
                                 @click="changeName(key)">
                         </v-ons-icon>
                         <v-ons-icon class="addItem" icon="fa-plus"
-                                @click="">
+                                @click="addItem(key)">
                         </v-ons-icon>
                         <v-ons-icon class="deleteBtn" icon="fa-trash-o"
                                 @click="deleteProject(key)">
@@ -47,7 +47,7 @@
                                 :key="item.name">
                             <div class="left">
                                 <img class="list-item__thumbnail"
-                                        :src="item.img"
+                                        v-show="item.img" :src="item.img"
                                         @click="showLargeImage(item.img)"
                                         alt="item.name">
                             </div>
@@ -192,10 +192,10 @@ export default {
                 initButtonText: '修改',
                 submitButtonText: '提交修改',
             },
-            currentCata: '', // 条目当前类别。用于修改类别
-            indexInCurrentCata: '', // 条目在当前类别中的index。用于移动类别时删除原条目
-            currentImg: '',  // 条目当前类别。用于修改类别时没有更新图片的情况
-            newCata: '', // 条目修改后的类别
+            currentCata: null, // 条目当前类别。用于修改类别
+            indexInCurrentCata: null, // 条目在当前类别中的index。用于移动类别时删除原条目
+            currentImg: null,  // 条目当前类别。用于修改类别时没有更新图片的情况
+            newCata: null, // editCard中条目修改后的类别。 和编辑框的选择类别双绑
 
             // 等待动画是否出现
             bWaiting: false,
@@ -209,7 +209,7 @@ export default {
                                 + '\n最多支持12个汉字及日文字符，或24个英文字符');
             if(sNewName && sNewName.trim()){
                let nResult = this.checkCataName(sNewName);
-               console.log(nResult)
+
                if(nResult===0){
                    this.$set(this.catas, sNewName, []);
                }
@@ -222,7 +222,7 @@ export default {
             }
         },
         changeName(currentName){
-            let sNewName = prompt('输入新的项目名称：'
+            let sNewName = prompt('输入新的分类名称：'
                                 + '\n最多支持12个汉字及日文字符，或24个英文字符');
             if(sNewName && sNewName.trim()){
                 let nResult = this.checkCataName(sNewName, currentName);
@@ -271,19 +271,28 @@ export default {
             this.indexInCurrentCata = index;
             this.currentImg = item.img;
             this.newCata = key;
-
-            // this.oEditCardProp.curCata = key;
             this.oEditCardProp.curName = item.name;
             this.oEditCardProp.curDes = item.des;
             this.oEditCardProp.bDisplay = true;
         },
-        submitEdit(newData){
+        addItem(key){
+            this.currentCata = key;
+            // 以下四项，和editItem相比，因为是添加项，所以应该使用默认的空值
+            this.indexInCurrentCata = null;
+            this.currentImg = null;
+            this.oEditCardProp.curName = '';
+            this.oEditCardProp.curDes = '';
+            this.newCata = key;
+            this.oEditCardProp.bDisplay = true;
+        },
+        submitEdit(newData){ // 编辑条目和添加条目，分两种情况
             // 两个维度四个情况
             // 改类别改名      检查重名       在新类别中检查
             // 改类别没改名    检查重名       在新类别中检查
             // 没改类别改名    检查重名       当前类别中检查
             // 没改类别没改名  不能检查重名
             if(this.currentCata!==this.newCata){ // 改类别
+
                 // 在新类别中检查重名
                 let bDuplicate = this.catas[this.newCata].items.some(val=>{
                     return val.name === newData.name;
@@ -293,14 +302,19 @@ export default {
                         + newData.name + ' 条目');
                     return;
                 }
+
+                // 新类中加上该项目
                 this.catas[this.newCata].items.push({
                     img: newData.img || this.currentImg,
                     name: newData.name,
                     des: newData.des,
                 });
 
-                this.catas[this.currentCata].items.
+                // 旧类中移除该项
+                if(this.indexInCurrentCata!==null){ // 编辑，而非新加
+                    this.catas[this.currentCata].items.
                     splice(this.indexInCurrentCata, 1);
+                }
 
                 this.oEditCardProp.bDisplay = false;
 
@@ -315,15 +329,25 @@ export default {
                     return;
                 }
 
-                let item = this.catas[this.currentCata].
-                                items[this.indexInCurrentCata];
-                item.name = newData.name;
-                item.des = newData.des;
-                newData.img && (item.img=newData.img);
+                if(this.indexInCurrentCata){  // 编辑，而非新加
+                    let item = this.catas[this.currentCata].
+                    items[this.indexInCurrentCata];
+
+                    item.name = newData.name;
+                    item.des = newData.des;
+                    newData.img && (item.img=newData.img);
+                }
+                else{
+                    this.catas[this.currentCata].items.push({
+                        img: newData.img,
+                        name: newData.name,
+                        des: newData.des,
+                    });
+                }
 
                 this.oEditCardProp.bDisplay = false;
             }
-            else{ // 没改类别没改名
+            else{ // 没改类别没改名  这种情况只能是编辑，不会是新加
                 let item = this.catas[this.currentCata].
                                 items[this.indexInCurrentCata];
                 item.name = this.oEditCardProp.curName;
@@ -497,8 +521,7 @@ ons-page{
 
     ons-toolbar{
         .search-input{
-            position: absolute;
-            top: 0; bottom: 0; margin: auto;
+            @include absVerCenter;
             width: 12em; height: 28px;
             left: 14px;
         }
@@ -506,11 +529,8 @@ ons-page{
             height: 28px;
             line-height: 28px;
             width: 6em;
-            position: absolute;
+            @include absVerCenter;
             right: 14px;
-            top: 0;
-            bottom: 0;
-            margin: auto;
             padding: 0;
             background-color: #0076ff;
             border: 0 solid currentColor;
@@ -529,12 +549,18 @@ ons-page{
                 // margin-bottom: 22px;
                 padding: 10px 0;
                 ons-list-header{
+                    height: 25px;
                     font-size: 18px;
                     color: $BASIC-RED;
                     background-color: #ccc;
+                    .addItem{
+                        @include absCenter;
+                        text-align: center; line-height: 28px;
+                        width: 18px; height: 100%;
+                    }
                     .caret-up, .caret-down{
-                        position: absolute; margin: auto;
-                        top: 0; right: 0; bottom: 0; left: 0;
+                        @include absVerCenter;
+                        right: 50px;
                         text-align: center;
                         width: 18px; height: 12px;
                     }
@@ -561,6 +587,9 @@ ons-page{
                     overflow: hidden;
                     ons-list-item{
                         margin-bottom: 6px;
+                        .left{
+                            width: 40px; height: 44px;
+                        }
                         .center{
                             padding: 2px 8px;
                             .list-item__title{
@@ -600,8 +629,7 @@ ons-page{
         background-color: rgba(0, 0, 0, 0.7);
         #largeImage{
             display: block;
-            position: absolute;
-            top: 0; right: 0; bottom: 0; left: 0; margin: auto;
+            @include absCenter;
             max-width: 80%; max-height: 80%;
         }
     }
