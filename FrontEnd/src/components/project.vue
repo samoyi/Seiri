@@ -1,4 +1,4 @@
-<!--
+ <!--
 ## 该组件功能：
     * 物品分类
     * 物品状态管理
@@ -22,10 +22,10 @@
                     @click="addCata" />
         </v-ons-toolbar>
         <v-ons-list>
-            <ul>
-                <li v-for="(cata,key) in catas" :key="key">
+            <ul class="catas-ul">
+                <li class="cata-li" v-for="(cata,key) in catas" :key="key">
                     <v-ons-list-header>
-                        {{key}}
+                        <span class="cata-name">{{key}}</span>
                         <v-ons-icon v-show="cata.folded" class="caret-up"
                                 icon="fa-caret-up" @click="unfold(key)">
                         </v-ons-icon>
@@ -62,6 +62,10 @@
                             <v-ons-icon class="edit-item"
                                     icon="fa-pencil-square-o"
                                     @click="editItem(key, index)">
+                            </v-ons-icon>
+                            <v-ons-icon class="delete-item" icon="fa-trash-o"
+                                    @click="deleteItem(key, index, $ons.notification.confirm('删除 ' + item.name + ' ？'))"
+                                    >
                             </v-ons-icon>
                         </v-ons-list-item>
                     </div>
@@ -118,7 +122,7 @@ export default {
 
             catas: { // 当前的项目列表
                 'cata1': {
-                    folded: false,
+                    folded: true,
                     items: [
                         {
                             img: './upload/images/projectCover/0.png',
@@ -143,11 +147,211 @@ export default {
                     ]
                 },
                 'cata2': {
-                    folded: true,
+                    folded: false,
                     items: [
                         {
                             img: './upload/images/projectCover/0.png',
                             name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '123435123435',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '123435123435',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '123435123435',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '123435123435',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '123435123435',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '123435123435',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '123435123435',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '123435123435',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '123435123435',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '123435123435',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '123435123435',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '123435123435',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '123435123435',
                             des: '描述0',
                         },
                         {
@@ -158,7 +362,7 @@ export default {
                     ]
                 },
                 'cata3': {
-                    folded: true,
+                    folded: false,
                     items: [
                         {
                             img: './upload/images/projectCover/0.png',
@@ -275,6 +479,14 @@ export default {
             this.oEditCardProp.curDes = item.des;
             this.oEditCardProp.bDisplay = true;
         },
+        deleteItem(key, index, promise){
+            let items = this.catas[key].items;
+            promise.then((result)=>{
+                if(result===1){
+                    items.splice(index, 1);
+                }
+            });
+        },
         addItem(key){
             this.currentCata = key;
             // 以下四项，和editItem相比，因为是添加项，所以应该使用默认的空值
@@ -363,50 +575,6 @@ export default {
         closeCard(){
             this.oEditCardProp.bDisplay = false;
         },
-        // addProject(){
-        //     // 当this.bDisplayAddCard为false时，表示没有处于添加项目状态，点击按钮则添加项目窗口出现
-        //     // 当this.bDisplayAddCard为true时，表示当前处于添加项目状态，点击按钮则进行实际的数据添加
-        //     if(this.bDisplayAddCard){ // 实际的数据添加
-        //         // TODO  压缩回调后才能进行下面的代码
-        //         let sNewName = this.newProject.newProjectName;
-        //         if(sNewName.trim()){
-        //             let nResult = this.checkCataName(sNewName);
-        //             if(nResult===0){
-        //                 let sCoverURL = '';
-        //                 if(this.compressedCover){ // 上传了封面图
-        //                     sCoverURL = URL.createObjectURL(this.compressedCover);
-        //                     alert('TODO: send image to backend');
-        //                 }
-        //                 this.projects.push({
-        //                     img: sCoverURL,
-        //                     name: sNewName,
-        //                     id: this.nNextID++
-        //                 });
-        //                 this.bAddedProject = true;
-        //                 this.bDisplayAddCard = false;
-        //                 this.newProject.newProjectName = '';
-        //             }
-        //             else if(nResult===2){
-        //                 alert('项目名称过长');
-        //             }
-        //             else if(nResult===4){
-        //                 alert('和其他项目重名');
-        //             }
-        //         }
-        //         else{
-        //             alert('必须填写项目名称');
-        //         }
-        //     }
-        //     else{ // 添加项目窗口出现
-        //         this.bDisplayAddCard = true;
-        //         // 清空之前上传的封面
-        //         oProjects.querySelector('#cardForAdd .selectImage').value = null;
-        //         this.compressedCover = null;
-        //     }
-        // },
-        // closeAddProject(){
-        //     this.bDisplayAddCard = false;
-        // },
         checkCataName(sName, currentName=''){
             let nErrCode = 0;
             if(sName && sName.trim()){
@@ -433,72 +601,11 @@ export default {
             }
             return nErrCode;
         },
-        // setCoverSize(aCoverNode){ // 如果上传了图片且图片宽度如果设置为100%会拉伸，就设置为auto
-        //     // 必须确保图片加载完，才能获得naturalWidth
-        //     let nMaxWidth = window.innerWidth - 16 - 32;
-        //
-        //     aCoverNode.forEach(cover=>{
-        //         if(cover.naturalWidth && cover.naturalWidth<nMaxWidth){
-        //             cover.style.width = 'auto';
-        //         }
-        //     })
-        // },
-        // handleChangeCover(index, ev){
-        //     let oUploadedImage = (ev.target.files)[0];
-        //     if(oUploadedImage){ // 如果为false则是用户取消了上传
-        //         this.handleImage(oUploadedImage, blob=>{
-        //             let oCoverNode = oProjects.querySelectorAll('#project-list .projectCard')[index].querySelector('img');
-        //             oCoverNode.onload = ()=>{
-        //                 this.setCoverSize([oCoverNode]);
-        //             };
-        //             this.projects[index].img = URL.createObjectURL(blob);
-        //         });
-        //     }
-        // },
-        // handleNewCover(ev){
-        //     let oUploadedImage = (ev.target.files)[0];
-        //     if(oUploadedImage){ // 如果为false则是用户取消了上传
-        //         this.handleImage(oUploadedImage, blob=>{
-        //             alert('新图片上传好了');
-        //         });
-        //     }
-        // },
-        // handleImage(oUploadedImage, callback){ // 处理上传的图片
-        //     this.bWaiting = true;
-        //     imageCompress(oUploadedImage, ['image/jpeg', 'image/png', 'image/webp'], 5*1024*1024, res=>{
-        //         let nErrCode = res.errCode;
-        //         if(nErrCode===1){
-        //             alert('图片只支持jpg、png和webp三种格式');
-        //         }
-        //         else if(nErrCode===2){
-        //             alert('图片大小不能超过5MB');
-        //         }
-        //         else{
-        //             this.compressedCover = res.blob;
-        //             callback(res.blob);
-        //         }
-        //         this.bWaiting = false;
-        //     });
-        // },
+
     },
     mounted(){
-        // oProjects = document.querySelector('#projects');
-        // window.onload = ()=>{ // 封面图加载完成后，设置合适的尺寸
-        //     let aCoverNode = [...oProjects.querySelectorAll('#project-list .project-cover')];
-        //     this.setCoverSize(aCoverNode);
-        // };
         oLargeImage = document.querySelector('#largeImage');
     },
-    // updated(){
-    //     // 新封面图加载完成后调整大小
-    //     if(this.bAddedProject){
-    //         this.bAddedProject = false;
-    //         let oCoverNode = oProjects.querySelector('#project-list').lastChild.querySelector('img');
-    //         oCoverNode.onload = ()=>{
-    //             this.setCoverSize([oCoverNode]);
-    //         };
-    //     }
-    // },
 }
 
 // 检测项目名长度，长度不超过12个中日文/24个英文字母的长度
@@ -549,18 +656,27 @@ ons-page{
                 // margin-bottom: 22px;
                 padding: 10px 0;
                 ons-list-header{
-                    height: 25px;
-                    font-size: 18px;
+                    height: 25px; line-height: 25px;
+                    font-size: 16px;
                     color: $BASIC-RED;
                     background-color: #ccc;
+                    .cata-name{
+                        font-size: 18px;
+                        height: 15px;
+                        position: relative;
+                        top: -6px;
+                        left: 6px;
+                    }
                     .addItem{
                         @include absCenter;
-                        text-align: center; line-height: 28px;
-                        width: 18px; height: 100%;
+                        text-align: center;
+                        line-height: 28px;
+                        width: 18px;
+                        height: 100%;
                     }
                     .caret-up, .caret-down{
                         @include absVerCenter;
-                        right: 50px;
+                        right: 60px;
                         text-align: center;
                         width: 18px; height: 12px;
                     }
@@ -572,15 +688,18 @@ ons-page{
                         height: 100%;
                         width: 100%;
                     }
+                    .rename, .deleteBtn{
+                        font-size: 18px;
+                        height: 15px;
+                        position: relative;
+                        top: -6px;
+                    }
                     .rename{
-                        font-size: 14px;
+                        left: 8px;
                     }
                     .deleteBtn{
-                        float: right;
-                        font-size: 20px;
-                        position: relative;
-                        top: 2px;
                         right: 8px;
+                        float: right;
                     }
                 }
                 >div{
@@ -600,6 +719,12 @@ ons-page{
                             }
                         }
                         .edit-item{
+                            font-size: 14px;
+                            color: $BASIC-RED;
+                            position: absolute;
+                            right: 48px;
+                        }
+                        .delete-item{
                             font-size: 14px;
                             color: $BASIC-RED;
                             position: absolute;

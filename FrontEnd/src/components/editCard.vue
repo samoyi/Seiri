@@ -94,7 +94,7 @@ export default {
     },
     data () {
         return {
-            newData: {
+            newData: { // this.newData中的项目和表单双绑
                 cata: '',
                 name: '',
                 des: '',
@@ -132,8 +132,13 @@ export default {
                 }
 
                 this.$emit('ec-submit', this.newData);
-                // 提交后清空图片数据，以免下一次修改时如果没有上传图片，还会继续使用这
-                // 次的图片
+                // 如果下一次使用editCard是addItem操作，则传入的curName和curDes是空
+                // 字符串，从而watch不会有变化，this.newData中的name和des还是上一次
+                // 编辑时留下的。所以这里要清空
+                this.newData.name = '';
+                this.newData.des = '';
+                // 提交后清空图片数据，以免下一次修改时如果没有上传图片，还会继续使用
+                // 这次的图片
                 this.newData.img = '';
             }
             else{
@@ -186,8 +191,9 @@ export default {
         },
     },
     watch: {
+        // 父组件传入的项目名称和项目描述会更新this.newData中对应的项目
+        // 如果前一次进行的是addItem操作，
         curName(sName){
-            console.log(sName);
             this.newData.name = sName;
         },
         curDes(sDes){
@@ -195,10 +201,10 @@ export default {
         },
     },
     mounted(){
-
+    },
+    beforeUpdate(){
     },
     updated(){
-        // console.log(this.curName);
     },
 }
 
