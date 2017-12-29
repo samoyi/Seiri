@@ -16,12 +16,15 @@
 <template>
     <v-ons-page>
         <v-ons-toolbar>
-            <input type="text" class="search-input"
-                    placeholder="关键词搜索物品" />
+            <input type="text" class="search-input" placeholder="关键词搜索物品"
+                     v-model.trim="searchWord" />
+            <v-ons-icon class="cancelSearch" icon="fa-times-circle-o"
+                     v-show="searchWord" @click="cancelSearch">
+            </v-ons-icon>
             <input type="button" class="addCata" value="添加分类"
                     @click="addCata" />
         </v-ons-toolbar>
-        <v-ons-list>
+        <v-ons-list id="list">
             <ul class="catas-ul">
                 <li class="cata-li" v-for="(cata,key) in catas" :key="key">
                     <v-ons-list-header>
@@ -89,6 +92,22 @@
                 @click="hideLargeImage">
             <img id="largeImage" src="" alt="断·舍·离" />
         </div>
+
+        <!-- 搜索结果 -->
+        <div v-show="searchWord" id="searchResultWrapper">
+            <v-ons-list id="searchResult" v-show="bDisplaySearchResult"
+                    modifier="inset">
+                <v-ons-list-header>“{{searchWord}}” 的搜索结果</v-ons-list-header>
+                <v-ons-list-item modifier="longdivider"
+                        @click="selectInSearch(aSearchResult[1][index][0],
+                                    aSearchResult[1][index][1])"
+                        v-for="(item,index) in aSearchResult[0]">
+                    {{item.name}}
+                    <br />{{item.des}}
+
+                </v-ons-list-item>
+            </v-ons-list>
+        </div>
         <!-- <div id="waiting" v-show="bWaiting">
             <img src="../assets/waiting.gif" alt="断·舍·离" />
         </div> -->
@@ -103,8 +122,9 @@ import MyUtil from '../js/MyUtil.js';
 // import imageCompress from '../js/frontEndImageCompress.js';
 
 
-// let oProjects = null; // mouted之后，选择该节点
-let oLargeImage = null;
+ // mouted之后，选择节点
+let oLargeImage = null,
+    oList = null;
 
 import editCard from './editCard.vue';
 
@@ -119,6 +139,9 @@ export default {
             // newProject: {
             //     newProjectName: '',
             // },
+            searchWord: '',
+            aSearchResult: [],
+            bDisplaySearchResult: false,
 
             catas: { // 当前的项目列表
                 'cata1': {
@@ -271,7 +294,7 @@ export default {
                         },
                         {
                             img: './upload/images/projectCover/0.png',
-                            name: '123435123435',
+                            name: '31415',
                             des: '描述0',
                         },
                         {
@@ -306,7 +329,7 @@ export default {
                         },
                         {
                             img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
+                            name: '定位测试',
                             des: '描述0',
                         },
                         {
@@ -601,10 +624,72 @@ export default {
             }
             return nErrCode;
         },
+        // 点击某个搜索结果
+        selectInSearch(sCata, nIndex){
+            // 只展开结果所在的分类，然后把列表滚动到所选项靠近顶部
+            // 如果结果条目太靠下以至于滚动到头也不能到最上面，那就只能滚动到头
+            // 一个cata折叠起来总高度是45，一个item总高度50
+            // 计算滚动距离是，需要知道第几个cata被展开了，以及item位于其中位置
+            // 以下两个变量用来计算第几个类别被展开了
+            // 因为是遍历对象，顺序并不一定是数据中的顺序。所幸只要保证这里遍历的顺序和
+            // 渲染时遍历的顺序相同即可。
+            // FIXME 虽然正常情况下，两个遍历的顺序是相同，但还是感觉不保险
+            let nForInIndex = 0,
+                nUnfoldIndex = 0;
 
+            const CATA_HEIGHT = 45;
+            const ITEM_HEIGHT = 50;
+
+            for(let cata in this.catas){
+                if(cata !== sCata){
+                    this.catas[cata].folded = true;
+                }
+                else{
+                    this.catas[cata].folded = false;
+
+                    nUnfoldIndex = nForInIndex;
+                }
+                nForInIndex++;
+            }
+
+            this.$nextTick(()=>{ // 测试中似乎是要等到折叠和展开的渲染结束
+                oList.parentNode.scrollTop = CATA_HEIGHT*nUnfoldIndex
+                + nIndex*ITEM_HEIGHT + 100;
+            });
+
+            this.searchWord = '';
+        },
+        cancelSearch(){
+            this.searchWord = '';
+        },
+    },
+    watch: {
+        searchWord(keyword){
+            if(keyword){
+                let oCata = this.catas,
+                    aFilter = [],
+                    aMatch = [],
+                    aIndex = []; // 用来确定搜索到的项目的位置
+
+                for(let cata in oCata){
+                    aFilter = oCata[cata].items.filter((item, index)=>{
+                        if(item.name.includes(keyword)
+                            || item.des.includes(keyword)){
+                            aIndex.push([cata, index]);
+                            return true;
+                        }
+                        return false;
+                    });
+                    aMatch = aMatch.concat(aFilter);
+                }
+                this.bDisplaySearchResult = true;
+                this.aSearchResult = [aMatch, aIndex];
+            }
+        },
     },
     mounted(){
         oLargeImage = document.querySelector('#largeImage');
+        oList =  document.querySelector('#list');
     },
 }
 
@@ -629,8 +714,13 @@ ons-page{
     ons-toolbar{
         .search-input{
             @include absVerCenter;
-            width: 12em; height: 28px;
+            width: 14em; height: 28px;
             left: 14px;
+        }
+        .cancelSearch{
+            position: absolute;
+            top: 20px;
+            left: 194px;
         }
         .addCata{
             height: 28px;
@@ -758,99 +848,32 @@ ons-page{
             max-width: 80%; max-height: 80%;
         }
     }
-//     #project-list{
-//         margin-bottom: 40px;
-//         .projectCard{
-//             .project-cover{
-//                 color: gray;
-//                 display: block;
-//                 width: 100%; margin: auto;
-//             }
-//             .noCover{
-//                 min-height: 50px;
-//             }
-//             .project-name{
-//                 color: $BASIC-RED;
-//                 font-size: 18px;
-//                 position: relative;
-//                 top: 6px;
-//                 display: inline-block;
-//                 .rename{
-//                     color: $BASIC-RED;
-//                     font-size: 18px;
-//                     position: absolute; right: -24px; top: 0;
-//                 }
-//             }
-//             .deleteBtn, .changeCover{
-//                 float: right;
-//                 color: $BASIC-RED;
-//                 font-size: 24px;
-//                 position: relative; top: 2px;
-//             }
-//             .changeCover{
-//                 margin-right: 12px;
-//                 position: relative;
-//                 .changeCoverInput{
-//                     width: 100%; height: 100%;
-//                     position: absolute; top: 0; left: 0;
-//                     opacity: 0;
-//                 }
-//             }
-//         }
-//     }
-//
-//     #cardForAdd{
-//         min-height: 66px;
-//         position: fixed; left: 0; bottom: 0; width: 100%;
-//         padding: 16px; box-sizing: border-box;
-//         .closeBtn{
-//             position: absolute;
-//             top: 8px; right: 8px;
-//         }
-//         .newProjectName, .newProjectCover{
-//             display: block;
-//             width: 100%;
-//             border-top: none;
-//             border-right: none;
-//             border-left: none;
-//         }
-//         .newProjectName{
-//             height: 2em;
-//             margin-top: 14px;
-//         }
-//         p{
-//             font-size: 10px;
-//             text-align: left;
-//             color: gray;
-//             margin-top: 4px;
-//         }
-//         .newProjectCover{
-//             margin: 24px auto 0 auto;
-//             width: 120px;
-//             .selectImage{
-//                 width: 100%; height: 100%;
-//                 position: absolute; top: 0; left: 0;
-//                 opacity: 0;
-//             }
-//         }
-//         #addProjectBtn{
-//             position: absolute; bottom: 10px;
-//             width: 80%; left: 10%;
-//         }
-//     }
-//     .expanding{
-//         height: 200px;
-//     }
-//
-//     #waiting{
-//         width: 100%; height: 100%;
-//         position: fixed; top: 0; left: 0;
-//         background-color: rgba(0, 0, 0, 0.7);
-//         img{
-//             display: block; width: 100px;
-//             position: absolute; top: 0; right: 0; bottom: 0; left: 0; margin: auto;
-//         }
-//     }
+
+    #searchResultWrapper{
+        width: 100%; height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        @include fixedCenter;
+        overflow-y: scroll;
+
+        #searchResult{
+            width: 80%; left: 10%;
+            position: absolute; top: 25%;
+            background-color: white;
+            margin-bottom: 10%;
+            ons-list-header{
+                text-align: center;
+            }
+        }
+    }
+    #searchResultWrapper::-webkit-scrollbar {
+      width: 5px;
+      height: 8px;
+      background-color: #d2eef5;
+    }
+    #searchResultWrapper::-webkit-scrollbar-thumb {
+        background: $BASIC-RED;
+    }
+
 }
 
 
