@@ -20,6 +20,9 @@ function longPress(oNode, callback, nMS=800){
     oNode.addEventListener('touchend', ()=>{
         clearInterval(oNode.LPtimer);
     });
+    oNode.addEventListener('touchmove', (ev)=>{
+        clearInterval(oNode.LPtimer);
+    });
 }
 
 module.exports = {

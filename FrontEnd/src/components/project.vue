@@ -27,7 +27,7 @@
         <v-ons-list id="list">
             <ul class="catas-ul">
                 <li class="cata-li" v-for="(cata,key) in catas" :key="key">
-                    <v-ons-list-header>
+                    <v-ons-list-header :class="{fixedHeader:sFixedHeaderKey===key}">
                         <span class="cata-name">{{key}}</span>
                         <v-ons-icon v-show="cata.folded" class="caret-up"
                                 icon="fa-caret-up" @click="unfold(key)">
@@ -46,8 +46,9 @@
                         </v-ons-icon>
                     </v-ons-list-header>
                     <div :class="{folded: cata.folded}">
-                        <v-ons-list-item v-for="(item, index) in cata.items"
-                                :key="item.name">
+                        <v-ons-list-item class="item"
+                                v-for="(item, index) in cata.items"
+                                @click="currentItemID=item.id" :key="item.name">
                             <div class="left">
                                 <img class="list-item__thumbnail"
                                         v-show="item.img" :src="item.img"
@@ -63,11 +64,15 @@
                                 </span>
                             </div>
                             <v-ons-icon class="edit-item"
+                                    v-show="currentItemID===item.id"
                                     icon="fa-pencil-square-o"
                                     @click="editItem(key, index)">
                             </v-ons-icon>
                             <v-ons-icon class="delete-item" icon="fa-trash-o"
-                                    @click="deleteItem(key, index, $ons.notification.confirm('删除 ' + item.name + ' ？'))"
+                                    v-show="currentItemID===item.id"
+                                    @click="deleteItem(key, index,
+                                            $ons.notification.confirm('删除 '
+                                            +item.name + ' ？'))"
                                     >
                             </v-ons-icon>
                         </v-ons-list-item>
@@ -122,9 +127,16 @@ import MyUtil from '../js/MyUtil.js';
 // import imageCompress from '../js/frontEndImageCompress.js';
 
 
+// 一个cata折叠起来总高度是45，一个item总高度50
+const CATA_HEIGHT = 45;
+const ITEM_HEIGHT = 50;
+
+
+
  // mouted之后，选择节点
 let oLargeImage = null,
-    oList = null;
+    oList = null,
+    aItem = [];
 
 import editCard from './editCard.vue';
 
@@ -134,11 +146,8 @@ export default {
     },
     data () {
         return {
-            // nNextID: 4, // 新添加项目的ID
-            // bDisplayAddCard: false, // 是否正在添加项目
-            // newProject: {
-            //     newProjectName: '',
-            // },
+
+            // 搜索相关的属性
             searchWord: '',
             aSearchResult: [],
             bDisplaySearchResult: false,
@@ -151,21 +160,25 @@ export default {
                             img: './upload/images/projectCover/0.png',
                             name: '第一个项目',
                             des: '描述0',
+                            id: '0'
                         },
                         {
                             img: './upload/images/projectCover/0.png',
                             name: '立春雨水惊蛰春分清明谷雨',
                             des: '描述1',
+                            id: '1'
                         },
                         {
                             img: './upload/images/projectCover/1.png',
                             name: 'aaaaaaaaaaaaaaaaaaaaaaaa',
                             des: '描述2',
+                            id: '2'
                         },
                         {
                             img: './upload/images/projectCover/2.jpg',
                             name: 'はははははははははははは',
                             des: '描述3',
+                            id: '3'
                         },
                     ]
                 },
@@ -176,211 +189,91 @@ export default {
                             img: './upload/images/projectCover/0.png',
                             name: '第二个项目',
                             des: '描述0',
+                            id: '4'
                         },
                         {
                             img: './upload/images/projectCover/0.png',
                             name: '第二个项目',
                             des: '描述0',
+                            id: '5'
+                        },
+                        {
+                            img: './upload/images/projectCover/0.png',
+                            name: '第二个项目',
+                            des: '描述0',
+                            id: '6'
                         },
                         {
                             img: './upload/images/projectCover/0.png',
                             name: '123435123435',
                             des: '描述0',
+                            id: '7'
                         },
                         {
                             img: './upload/images/projectCover/0.png',
                             name: '第二个项目',
                             des: '描述0',
+                            id: '8'
                         },
                         {
                             img: './upload/images/projectCover/0.png',
                             name: '第二个项目',
                             des: '描述0',
+                            id: '9'
                         },
                         {
                             img: './upload/images/projectCover/0.png',
                             name: '第二个项目',
                             des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '123435123435',
-                            des: '描述0',
+                            id: '10'
                         },
                         {
                             img: './upload/images/projectCover/0.png',
                             name: '第二个项目',
                             des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '123435123435',
-                            des: '描述0',
+                            id: '11'
                         },
                         {
                             img: './upload/images/projectCover/0.png',
                             name: '第二个项目',
                             des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '123435123435',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '123435123435',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '123435123435',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '123435123435',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
+                            id: '12'
                         },
                         {
                             img: './upload/images/projectCover/0.png',
                             name: '31415',
                             des: '描述0',
+                            id: '13'
                         },
                         {
                             img: './upload/images/projectCover/0.png',
                             name: '第二个项目',
                             des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '123435123435',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '123435123435',
-                            des: '描述0',
+                            id: '14'
                         },
                         {
                             img: './upload/images/projectCover/0.png',
                             name: '定位测试',
                             des: '描述0',
+                            id: '15'
                         },
                         {
                             img: './upload/images/projectCover/0.png',
                             name: '第二个项目',
                             des: '描述0',
+                            id: '16'
                         },
                         {
                             img: './upload/images/projectCover/0.png',
                             name: '第二个项目',
                             des: '描述0',
+                            id: '17'
                         },
                         {
                             img: './upload/images/projectCover/0.png',
                             name: '123435123435',
                             des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '123435123435',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '123435123435',
-                            des: '描述0',
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '立春雨水惊蛰春分清明谷雨',
-                            des: '描述1',
+                            id: '18'
                         },
                     ]
                 },
@@ -391,16 +284,19 @@ export default {
                             img: './upload/images/projectCover/0.png',
                             name: '第三个项目',
                             des: '描述0',
+                            id: '19'
                         },
                         {
                             img: './upload/images/projectCover/2.jpg',
                             name: 'はははははははははははは',
                             des: '描述3',
+                            id: '20'
                         },
                     ]
                 },
             },
 
+            // 编辑卡片定值属性
             oEditCardProp: {
                 bDisplay: false,
                 bBtnDisplay: false,
@@ -419,15 +315,25 @@ export default {
                 initButtonText: '修改',
                 submitButtonText: '提交修改',
             },
+
+            // 编辑条目时用到属性
             currentCata: null, // 条目当前类别。用于修改类别
             indexInCurrentCata: null, // 条目在当前类别中的index。用于移动类别时删除原条目
-            currentImg: null,  // 条目当前类别。用于修改类别时没有更新图片的情况
+            currentImg: null,  // 条目当前图片链接。用于修改类别时没有更新图片的情况
             newCata: null, // editCard中条目修改后的类别。 和编辑框的选择类别双绑
+            currentItemID: '', // 点击或长按的条目ID
 
             // 等待动画是否出现
             bWaiting: false,
 
+            // 是否显示条目大图
             bDisplayLargeImage: false,
+
+            // 列表每一类别的高度
+            // 用于滚动时，如果某个类别处于展开状态且有一部分超出了上边界，则把该类别
+            // 的头部固定到顶部
+            aListHeight: [],
+            sFixedHeaderKey: '', // 第几个类别的头部固定
         };
     },
     methods:{
@@ -439,6 +345,7 @@ export default {
 
                if(nResult===0){
                    this.$set(this.catas, sNewName, []);
+                   this.listHeight();
                }
                else if(nResult===2){
                    alert('类别名称过长');
@@ -470,6 +377,7 @@ export default {
                 if( prompt('输入类别名称，以完成删除：').trim()===sCataName ){
                     this.$set(this.catas, sCataName, undefined);
                     delete this.catas[sCataName];
+                    this.listHeight();
                 }
                 else{
                     alert('类别名称输入不正确。删除取消。');
@@ -488,9 +396,11 @@ export default {
         },
         unfold(key){
             this.catas[key].folded = false;
+            this.listHeight();
         },
         fold(key){
             this.catas[key].folded = true;
+            this.listHeight();
         },
         editItem(key, index){
             let item = this.catas[key].items[index];
@@ -507,6 +417,7 @@ export default {
             promise.then((result)=>{
                 if(result===1){
                     items.splice(index, 1);
+                    this.listHeight();
                 }
             });
         },
@@ -519,6 +430,8 @@ export default {
             this.oEditCardProp.curDes = '';
             this.newCata = key;
             this.oEditCardProp.bDisplay = true;
+
+            this.listHeight();
         },
         submitEdit(newData){ // 编辑条目和添加条目，分两种情况
             // 两个维度四个情况
@@ -628,7 +541,6 @@ export default {
         selectInSearch(sCata, nIndex){
             // 只展开结果所在的分类，然后把列表滚动到所选项靠近顶部
             // 如果结果条目太靠下以至于滚动到头也不能到最上面，那就只能滚动到头
-            // 一个cata折叠起来总高度是45，一个item总高度50
             // 计算滚动距离是，需要知道第几个cata被展开了，以及item位于其中位置
             // 以下两个变量用来计算第几个类别被展开了
             // 因为是遍历对象，顺序并不一定是数据中的顺序。所幸只要保证这里遍历的顺序和
@@ -636,9 +548,6 @@ export default {
             // FIXME 虽然正常情况下，两个遍历的顺序是相同，但还是感觉不保险
             let nForInIndex = 0,
                 nUnfoldIndex = 0;
-
-            const CATA_HEIGHT = 45;
-            const ITEM_HEIGHT = 50;
 
             for(let cata in this.catas){
                 if(cata !== sCata){
@@ -658,9 +567,27 @@ export default {
             });
 
             this.searchWord = '';
+
+            this.listHeight();
         },
         cancelSearch(){
             this.searchWord = '';
+        },
+
+        // 当列表展开状态发生了变化，或者列表项有增减时，执行这个函数
+        // 计算出列表的总高度和每一类别的高度
+        listHeight(){
+            let aHeight = [];
+            for(let key in this.catas){
+                if(this.catas[key].folded){
+                    aHeight.push(CATA_HEIGHT);
+                }
+                else{
+                    aHeight.push(CATA_HEIGHT
+                        + ITEM_HEIGHT*this.catas[key].items.length);
+                }
+            }
+            this.aListHeight = aHeight;
         },
     },
     watch: {
@@ -690,6 +617,42 @@ export default {
     mounted(){
         oLargeImage = document.querySelector('#largeImage');
         oList =  document.querySelector('#list');
+
+        this.listHeight();
+
+        aItem = [...oList.querySelectorAll('.item')];
+        aItem.forEach(node=>{
+            MyUtil.longPress(node, ()=>{
+                node.style.color = 'royalblue';
+            });
+        });
+
+        // 滚动列表时，当前分类的头部固定
+        {
+            let aHeader = document.querySelectorAll('.cata-li ons-list-header');
+            // .page__content这个节点时OnsenUI动态生成的
+            document.querySelector('.page__content').addEventListener('scroll', ()=>{
+                if(oList.parentNode.scrollTop===0){
+                    this.sFixedHeaderKey = '';
+                }
+                else{
+                    let i = 0,
+                    aHeight = this.aListHeight,
+                    len = this.aListHeight.length;
+                    while(oList.parentNode.scrollTop>aHeight[i] && i<len){
+                        i++;
+                    }
+                    if(aHeight[i]>45){
+                        for(let key in this.catas){
+                            if(i-- === 0){
+                                this.sFixedHeaderKey = key;
+                            }
+                        }
+                    }
+                }
+
+            });
+        }
     },
 }
 
@@ -792,9 +755,15 @@ ons-page{
                         float: right;
                     }
                 }
+                .fixedHeader{
+                    position: fixed; width: 100%;
+                    z-index: 1;
+                    // cata的li有padding10
+                    top: $HEADER-HEIGHT+$PROJECT-HEIGHT+10px;
+                }
                 >div{
                     overflow: hidden;
-                    ons-list-item{
+                    .item{
                         margin-bottom: 6px;
                         .left{
                             width: 40px; height: 44px;
