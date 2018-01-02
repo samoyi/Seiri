@@ -22,7 +22,8 @@
                      v-show="searchWord" @click="cancelSearch">
             </v-ons-icon>
             <input type="button" class="addCata" value="添加分类"
-                    @click="addCata" />
+                    @click="addCata($ons.notification.prompt('输入新的类别名称：'
+                            + '\n最多支持12个汉字及日文字符，或24个英文字符'))" />
         </v-ons-toolbar>
         <v-ons-list id="list">
             <ul class="catas-ul">
@@ -36,19 +37,31 @@
                                 icon="fa-caret-down" @click="fold(key)">
                         </v-ons-icon>
                         <v-ons-icon class="rename" icon="fa-pencil"
-                                @click="changeName(key)">
+                                @click="changeName(key
+                                            , $ons.notification.prompt(
+                                                '输入新的分类名称：'
+                                                + '\n最多支持12个汉字及日文字符，'
+                                                + '或24个英文字符'))">
                         </v-ons-icon>
                         <v-ons-icon class="addItem" icon="fa-plus"
                                 @click="addItem(key)">
                         </v-ons-icon>
                         <v-ons-icon class="deleteBtn" icon="fa-trash-o"
-                                @click="deleteProject(key)">
+                                @click="deleteProject(key
+                                        , $ons.notification.confirm(
+                                                '确定删除 ' +key+ ' 类别？'
+                                                + '\n删除后不可恢复'))">
                         </v-ons-icon>
                     </v-ons-list-header>
                     <div :class="{folded: cata.folded}">
                         <v-ons-list-item class="item"
                                 v-for="(item, index) in cata.items"
-                                @click="currentItemID=item.id" :key="item.name">
+                                :key="item.name"
+                                v-longPress="bindLongPress"
+                                @touchstart="touchstartItem(item, key)"
+                                @click="clickItem(item, key)"
+                                :class="{multiChoosing:
+                                            aMultiChosen.includes(item)}">
                             <div class="left">
                                 <img class="list-item__thumbnail"
                                         v-show="item.img" :src="item.img"
@@ -64,12 +77,14 @@
                                 </span>
                             </div>
                             <v-ons-icon class="edit-item"
-                                    v-show="currentItemID===item.id"
+                                    v-show="touchedItem.id===item.id
+                                            && !sCataInMultiChoosing"
                                     icon="fa-pencil-square-o"
                                     @click="editItem(key, index)">
                             </v-ons-icon>
                             <v-ons-icon class="delete-item" icon="fa-trash-o"
-                                    v-show="currentItemID===item.id"
+                                    v-show="touchedItem.id===item.id
+                                            && !sCataInMultiChoosing"
                                     @click="deleteItem(key, index,
                                             $ons.notification.confirm('删除 '
                                             +item.name + ' ？'))"
@@ -81,7 +96,7 @@
             </ul>
             <div class="mat" v-show="oEditCardProp.bDisplay"></div>
         </v-ons-list>
-        <edit-card
+        <edit-card class="itemEditCard"
             v-bind="oEditCardProp"
             v-on:ec-closeCard="closeCard"
             v-on:ec-submit="submitEdit"
@@ -93,6 +108,28 @@
                 </option>
             </select>
         </edit-card>
+        <v-ons-card id="batchCard" v-show="bDisplayBatchCard">
+            <v-ons-button modifier="outline" @click="selectAll">
+                全选
+            </v-ons-button>
+            <v-ons-button modifier="outline" @click="closeBatchCard">
+                取消
+            </v-ons-button>
+            <v-ons-button modifier="outline"
+                    @click="batchDelete($ons.notification.confirm(
+                            '删除 '+aMultiChosen.length+ ' 个所选项？'))">
+                删除
+            </v-ons-button>
+            <br />
+            将所选项目移动到：
+            <select v-model="sBatchMovingNewCata">
+                <option v-for="(cata, key) in catas"
+                        :selected="key===sCataInMultiChoosing" :value="key">
+                    {{key}}
+                </option>
+            </select>
+            <v-ons-button modifier="outline" @click="batchMove">移动</v-ons-button>
+        </v-ons-card>
         <div id="largeImageFrame" v-show="bDisplayLargeImage"
                 @click="hideLargeImage">
             <img id="largeImage" src="" alt="断·舍·离" />
@@ -106,7 +143,7 @@
                 <v-ons-list-item modifier="longdivider"
                         @click="selectInSearch(aSearchResult[1][index][0],
                                     aSearchResult[1][index][1])"
-                        v-for="(item,index) in aSearchResult[0]">
+                        v-for="(item,index) in aSearchResult[0]" :key="item.id">
                     {{item.name}}
                     <br />{{item.des}}
 
@@ -144,6 +181,7 @@ export default {
     components: {
         'edit-card': editCard,
     },
+    props: ['curCatas'],
     data () {
         return {
 
@@ -152,151 +190,146 @@ export default {
             aSearchResult: [],
             bDisplaySearchResult: false,
 
-            catas: { // 当前的项目列表
-                'cata1': {
-                    folded: true,
-                    items: [
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第一个项目',
-                            des: '描述0',
-                            id: '0'
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '立春雨水惊蛰春分清明谷雨',
-                            des: '描述1',
-                            id: '1'
-                        },
-                        {
-                            img: './upload/images/projectCover/1.png',
-                            name: 'aaaaaaaaaaaaaaaaaaaaaaaa',
-                            des: '描述2',
-                            id: '2'
-                        },
-                        {
-                            img: './upload/images/projectCover/2.jpg',
-                            name: 'はははははははははははは',
-                            des: '描述3',
-                            id: '3'
-                        },
-                    ]
-                },
-                'cata2': {
-                    folded: false,
-                    items: [
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                            id: '4'
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                            id: '5'
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                            id: '6'
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '123435123435',
-                            des: '描述0',
-                            id: '7'
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                            id: '8'
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                            id: '9'
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                            id: '10'
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                            id: '11'
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                            id: '12'
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '31415',
-                            des: '描述0',
-                            id: '13'
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                            id: '14'
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '定位测试',
-                            des: '描述0',
-                            id: '15'
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                            id: '16'
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第二个项目',
-                            des: '描述0',
-                            id: '17'
-                        },
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '123435123435',
-                            des: '描述0',
-                            id: '18'
-                        },
-                    ]
-                },
-                'cata3': {
-                    folded: false,
-                    items: [
-                        {
-                            img: './upload/images/projectCover/0.png',
-                            name: '第三个项目',
-                            des: '描述0',
-                            id: '19'
-                        },
-                        {
-                            img: './upload/images/projectCover/2.jpg',
-                            name: 'はははははははははははは',
-                            des: '描述3',
-                            id: '20'
-                        },
-                    ]
-                },
-            },
+            // catas: { // 当前的项目列表
+            //     'cata1': {
+            //         folded: true,
+            //         items: [
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '第一个项目',
+            //                 des: '描述0',
+            //                 id: '0'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '立春雨水惊蛰春分清明谷雨',
+            //                 des: '描述1',
+            //                 id: '1'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/1.png',
+            //                 name: 'aaaaaaaaaaaaaaaaaaaaaaaa',
+            //                 des: '描述2',
+            //                 id: '2'
+            //             },
+            //         ]
+            //     },
+            //     'cata2': {
+            //         folded: true,
+            //         items: [
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '第二个项目',
+            //                 des: '描述0',
+            //                 id: '4'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '第二个项目',
+            //                 des: '描述0',
+            //                 id: '5'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '定位测试',
+            //                 des: '描述0',
+            //                 id: '6'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '123435123435',
+            //                 des: '描述0',
+            //                 id: '7'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '第二个项目',
+            //                 des: '描述0',
+            //                 id: '8'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '第二个项目',
+            //                 des: '描述0',
+            //                 id: '9'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '第二个项目',
+            //                 des: '描述0',
+            //                 id: '10'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '第二个项目',
+            //                 des: '描述0',
+            //                 id: '11'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '第二个项目',
+            //                 des: '描述0',
+            //                 id: '12'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '31415',
+            //                 des: '描述0',
+            //                 id: '13'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '第二个项目',
+            //                 des: '描述0',
+            //                 id: '14'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '666',
+            //                 des: '描述0',
+            //                 id: '15'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '第二个项目',
+            //                 des: '描述0',
+            //                 id: '16'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '第二个项目',
+            //                 des: '描述0',
+            //                 id: '17'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '123435123435',
+            //                 des: '描述0',
+            //                 id: '18'
+            //             },
+            //         ]
+            //     },
+            //     'cata3': {
+            //         folded: true,
+            //         items: [
+            //             {
+            //                 img: './upload/images/projectCover/0.png',
+            //                 name: '第三个项目',
+            //                 des: '描述0',
+            //                 id: '19'
+            //             },
+            //             {
+            //                 img: './upload/images/projectCover/2.jpg',
+            //                 name: 'はははははははははははは',
+            //                 des: '描述3',
+            //                 id: '20'
+            //             },
+            //         ]
+            //     },
+            // },
+            catas: this.curCatas,
 
-            // 编辑卡片定值属性
+            // 编辑卡片定制属性
             oEditCardProp: {
                 bDisplay: false,
                 bBtnDisplay: false,
@@ -317,11 +350,18 @@ export default {
             },
 
             // 编辑条目时用到属性
-            currentCata: null, // 条目当前类别。用于修改类别
+            currentCata: null, // 被编辑条目的当前类别。用于修改类别
             indexInCurrentCata: null, // 条目在当前类别中的index。用于移动类别时删除原条目
-            currentImg: null,  // 条目当前图片链接。用于修改类别时没有更新图片的情况
+            currentImg: null,  // 被编辑条目的当前图片链接。用于修改类别时没有更新图片的情况
             newCata: null, // editCard中条目修改后的类别。 和编辑框的选择类别双绑
-            currentItemID: '', // 点击或长按的条目ID
+            touchedItem: {}, // 点击或长按的条目
+            touchedCata: '', // 点击或长按的条目所在類別
+
+            // 进入多选状态。出现取消和全选按钮，点击item变成多选
+            sCataInMultiChoosing: '', // 进入多选状态的类别。不能跨类别多选
+            aMultiChosen: [],
+            sBatchMovingNewCata: '',
+            bDisplayBatchCard: false,
 
             // 等待动画是否出现
             bWaiting: false,
@@ -337,52 +377,51 @@ export default {
         };
     },
     methods:{
-        addCata(){
-            let sNewName = prompt('输入新的类别名称：'
-                                + '\n最多支持12个汉字及日文字符，或24个英文字符');
-            if(sNewName && sNewName.trim()){
-               let nResult = this.checkCataName(sNewName);
+        addCata(promise){
+            promise.then((result)=>{
+                if(result && result.trim()){
+                   let nResult = this.checkCataName(result);
 
-               if(nResult===0){
-                   this.$set(this.catas, sNewName, []);
-                   this.listHeight();
-               }
-               else if(nResult===2){
-                   alert('类别名称过长');
-               }
-               else if(nResult===4){
-                   alert('和其他类别重名');
-               }
-            }
+                   if(nResult===0){
+                       this.$set(this.catas, result, {
+                           folded: false, items: [],
+                       });
+                       this.listHeight();
+                   }
+                   else if(nResult===2){
+                       alert('类别名称过长');
+                   }
+                   else if(nResult===4){
+                       alert('和其他类别重名');
+                   }
+                }
+            });
         },
-        changeName(currentName){
-            let sNewName = prompt('输入新的分类名称：'
-                                + '\n最多支持12个汉字及日文字符，或24个英文字符');
-            if(sNewName && sNewName.trim()){
-                let nResult = this.checkCataName(sNewName, currentName);
-                if(nResult===0){
-                    this.$set(this.catas, sNewName, this.catas[currentName]);
-                    delete this.catas[currentName];
+        changeName(currentName, promise){
+            promise.then((result)=>{
+                if(result && result.trim()){
+                    let nResult = this.checkCataName(result, currentName);
+                    if(nResult===0){
+                        this.$set(this.catas, result, this.catas[currentName]);
+                        delete this.catas[currentName];
+                    }
+                    else if(nResult===2){
+                        alert('类别名称过长');
+                    }
+                    else if(nResult===4){
+                        alert('和其他类别重名');
+                    }
                 }
-                else if(nResult===2){
-                    alert('类别名称过长');
-                }
-                else if(nResult===4){
-                    alert('和其他类别重名');
-                }
-            }
+            });
         },
-        deleteProject(sCataName){
-            if( confirm('确定删除该类别？\n删除后不可恢复') ){
-                if( prompt('输入类别名称，以完成删除：').trim()===sCataName ){
+        deleteProject(sCataName, promise){
+            promise.then((result)=>{
+                if(result===1){
                     this.$set(this.catas, sCataName, undefined);
                     delete this.catas[sCataName];
                     this.listHeight();
                 }
-                else{
-                    alert('类别名称输入不正确。删除取消。');
-                }
-            }
+            });
         },
         showLargeImage(src){
             oLargeImage.src = src;
@@ -401,6 +440,80 @@ export default {
         fold(key){
             this.catas[key].folded = true;
             this.listHeight();
+        },
+
+        // 之所以用touchstart加click，是因为复选的时候要获取this.touchedItem
+        // 在click事件中触发长按的时候还没有给this.touchedItem赋值，所以要提前在
+        // touchstart事件中赋值。而没有只用touchstart的原因是，在进入多选状态后，仅仅是
+        // 按住一个item并滑动屏幕，touchstart事件也会触发并把按住的item加入多选
+        touchstartItem(item, key){
+            this.touchedItem = item;
+            this.touchedCata = key;
+        },
+        clickItem(item, key){
+            if(this.sCataInMultiChoosing===key){ // 正在多选当前cata中的items
+                if(this.aMultiChosen.includes(item)){
+                    this.removeMultiChoose(item);
+                }
+                else{ // 本来已经被复选的，再按就是取消复选
+                    this.multiChoose(item);
+                }
+            }
+        },
+
+        bindLongPress(node){
+            MyUtil.longPress(node, ()=>{
+                if(this.sCataInMultiChoosing===''){//当前不是出于多选状态
+                    this.sCataInMultiChoosing = this.touchedCata;
+                    this.sBatchMovingNewCata = this.touchedCata;
+                    this.multiChoose(this.touchedItem);
+                    this.bDisplayBatchCard = true;
+                }
+            });
+        },
+        multiChoose(item){
+            this.aMultiChosen.push(item);
+        },
+        removeMultiChoose(item){
+            let nIndex = this.aMultiChosen.indexOf(item);
+            this.aMultiChosen.splice(nIndex, 1);
+        },
+        closeBatchCard(){
+            this.bDisplayBatchCard = false;
+            this.aMultiChosen = [];
+            this.sCataInMultiChoosing = '';
+            this.sBatchMovingNewCata = '';
+        },
+        selectAll(){
+            this.aMultiChosen = [];
+            // 这里不能直接把this.catas[this.sCataInMultiChoosing].items赋值给
+            // this.aMultiChosen，因为batchMove里面要求修改前者的时候后者不变
+            this.catas[this.sCataInMultiChoosing].items.forEach(item=>{
+                this.aMultiChosen.push(item);
+            });
+        },
+        batchMove(){
+            if(this.sBatchMovingNewCata!==this.sCataInMultiChoosing){
+                this.aMultiChosen.forEach(item=>{
+                    this.catas[this.sBatchMovingNewCata].items.unshift(item);
+                    this.catas[this.sCataInMultiChoosing].items.splice(
+                        this.catas[this.sCataInMultiChoosing]
+                                .items.indexOf(item), 1);
+                });
+                this.closeBatchCard();
+            }
+        },
+        batchDelete(promise){
+            promise.then((result)=>{
+                if(result===1){
+                    this.aMultiChosen.forEach(item=>{
+                        this.catas[this.sCataInMultiChoosing].items.splice(
+                            this.catas[this.sCataInMultiChoosing]
+                            .items.indexOf(item), 1);
+                        });
+                        this.closeBatchCard();
+                }
+            });
         },
         editItem(key, index){
             let item = this.catas[key].items[index];
@@ -452,7 +565,7 @@ export default {
                 }
 
                 // 新类中加上该项目
-                this.catas[this.newCata].items.push({
+                this.catas[this.newCata].items.unshift({
                     img: newData.img || this.currentImg,
                     name: newData.name,
                     des: newData.des,
@@ -486,7 +599,7 @@ export default {
                     newData.img && (item.img=newData.img);
                 }
                 else{
-                    this.catas[this.currentCata].items.push({
+                    this.catas[this.currentCata].items.unshift({
                         img: newData.img,
                         name: newData.name,
                         des: newData.des,
@@ -563,7 +676,7 @@ export default {
 
             this.$nextTick(()=>{ // 测试中似乎是要等到折叠和展开的渲染结束
                 oList.parentNode.scrollTop = CATA_HEIGHT*nUnfoldIndex
-                + nIndex*ITEM_HEIGHT + 100;
+                + nIndex*ITEM_HEIGHT;
             });
 
             this.searchWord = '';
@@ -614,18 +727,23 @@ export default {
             }
         },
     },
+    directives: {
+        longPress: { // 自定义指令：长按
+            // 本来是用直接操作DOM的方法给每个item添加了长按监听，但是在item改变类别时，
+            // 并不是原封不动的移动items节点，而是移除旧的添加新的，这样就导致了新的节点
+            // 没有了长按监听
+            inserted: (node, binding)=>{
+                binding.value(node);
+            }
+        }
+    },
     mounted(){
         oLargeImage = document.querySelector('#largeImage');
         oList =  document.querySelector('#list');
 
         this.listHeight();
 
-        aItem = [...oList.querySelectorAll('.item')];
-        aItem.forEach(node=>{
-            MyUtil.longPress(node, ()=>{
-                node.style.color = 'royalblue';
-            });
-        });
+
 
         // 滚动列表时，当前分类的头部固定
         {
@@ -650,7 +768,6 @@ export default {
                         }
                     }
                 }
-
             });
         }
     },
@@ -790,6 +907,9 @@ ons-page{
                             right: 24px;
                         }
                     }
+                    .multiChoosing{
+                        color: royalblue;
+                    }
                 }
                 .folded{
                     height: 0;
@@ -805,6 +925,11 @@ ons-page{
         select{
             margin-top: 12px;
         }
+    }
+
+    #batchCard{
+        position: fixed; bottom: 0;
+        width: 100%;
     }
 
     #largeImageFrame{
