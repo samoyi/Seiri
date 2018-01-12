@@ -4,6 +4,7 @@ const app = connect();
 const cookieParser = require('cookie-parser'); // Connect不再包含cookieParser
 
 const cookie = require('./middleware/cookie');
+
 // app.use(cookieParser('tobi is a cool ferret'));
 // app.use(function(req, res){
 //     console.log('cookies: ' + JSON.stringify(req.cookies));
@@ -11,8 +12,16 @@ const cookie = require('./middleware/cookie');
 //     res.end('hello\n');
 // });
 
-app.use(cookie.setCookie('22', 33));
+
+cookie.setKey('virtual');
+// app.use(cookie.getCookies(cookies=>{
+//     console.log(cookies);
+// }));
+app.use(cookie.setCookie('name', 'siro', {secure: false}));
+app.use(cookie.setSignedCookie('age', '16', {secure: false}));
 app.use((req, res)=>{
     res.end('set cookie')
 });
+
+
 app.listen(3000);
