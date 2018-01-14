@@ -5,21 +5,27 @@ const crypto = require('crypto');
 const sha256 = crypto.createHash('sha256');
 
 
-let hmac = '';
+let hmac = null,
+    sSignatureKey = '';
 function setKey(sKey){
+    sSignatureKey = sKey.trim();
+
     // 参考这个  https://www.zhihu.com/question/19816240
-    if(typeof sKey === 'string' && sKey){
-        if(sKey.length>64){
-            sha256.update(sKey);
-            sKey = sha256.digest('hex');
+    if(typeof sSignatureKey === 'string' && sSignatureKey){
+        if(sSignatureKey.length>64){
+            sha256.update(sSignatureKey);
+            sSignatureKey = sha256.digest('hex');
         }
-        hmac = crypto.createHmac('sha256', sKey);
+        hmac = crypto.createHmac('sha256', sSignatureKey);
     }
     else{
         throw new TypeError('Parameter expected a non-empty string');
     }
 }
 
+
+let aCookie = []; // All the cookies to be set
+let aSingedCookieName = [];
 
 function _setCookie(sName, sValue, oConfig){
 
@@ -36,9 +42,13 @@ function _setCookie(sName, sValue, oConfig){
         }
     }
 
+    // Set-Cookie header will be constantly updated when setting multiple
+    // cookies, until the last cookie is set, Set-Cookie header will contain all
+    // the cookies.
+    aCookie.push(sName+ '=' +sValue+ sConfig);
     return (req, res, next)=>{
         res.writeHead(200, {
-            'Set-Cookie': sName+ '=' +sValue+ sConfig,
+            'Set-Cookie': aCookie,
         });
         next();
     }
@@ -46,6 +56,9 @@ function _setCookie(sName, sValue, oConfig){
 
 
 function setCookie(sName, sValue, oConfig){
+    sName = sName.trim();
+    sValue = sValue.trim();
+
     if(sValue.includes(SignedCookieSeparator)){
         throw new Error('"' + SignedCookieSeparator
                         + '" is separator for signed cookie separator');
@@ -55,9 +68,14 @@ function setCookie(sName, sValue, oConfig){
 
 
 function setSignedCookie(sName, sValue, oConfig){
+    sName = sName.trim();
+    sValue = sValue.trim();
+
     if(hmac){
+        aSingedCookieName.push(sName);
         hmac.update(sValue);
-        sValue = sValue +SignedCookieSeparator+ hmac.digest('hex');
+        sValue = sValue + SignedCookieSeparator + hmac.digest('hex');
+        hmac = crypto.createHmac('sha256', sSignatureKey);
         return _setCookie(sName, sValue, oConfig);
     }
     else{
@@ -66,19 +84,29 @@ function setSignedCookie(sName, sValue, oConfig){
 }
 
 
-// Check the value of a cookie to determine whether it is a normal cookie or a
-// signed cookie。If it is a signed cookie, check its signature.
-function checkCookie(sCookieValue){
-    let arr = sCookieValue.split(SignedCookieSeparator);
-    if(arr.length===1){
-        return sCookieValue;
-    }
-    if(arr.length===2){ // signed cookie
-        hmac.update(arr[0]);
-        if(hmac.digest('hex')===arr[1]){
-            return arr[0];
+// Check a cookie to determine whether it is a normal cookie or a signed cookie.
+// If is a normal cookie, cookie value will be returned directly.
+// If it is a signed cookie, check its signature. If the signature is wrong,
+// this function will rerutn false, or returns the unsigned cookie value.
+function checkCookie(sCookieName, sCookieValue){
+
+    if(aSingedCookieName.includes(sCookieName)){
+        // This cookie should be a signed cookie
+        let arr = sCookieValue.split(SignedCookieSeparator);
+
+        if(arr.length===2){ // signed cookie
+            hmac.update(arr[0]);
+            let hash = hmac.digest('hex');
+            hmac = crypto.createHmac('sha256', sSignatureKey);
+            if(hash===arr[1]){
+                return arr[0];
+            }
         }
     }
+    else{
+        return sCookieValue;
+    }
+
     return false;
 }
 
@@ -86,13 +114,18 @@ function checkCookie(sCookieValue){
 function getCookies(fnCallback){
     return (req, res, next)=>{
         let sCookies = req.headers.cookie,
-            oCookies = {};
+            oCookies = {},
+            checkResult = null;
         if(sCookies){
             let aPair = [];
+
             sCookies.split(';').forEach(cookie=>{
-                aPair = cookie.split('=');
-                if(checkCookie(aPair[1])===false){
-                    oCookies[aPair[0]] = aPair[1];
+                aPair = cookie.split('=').map(val=>val.trim());
+
+                checkResult = checkCookie(aPair[0], aPair[1]);
+
+                if(checkResult!==false){
+                    oCookies[aPair[0]] = checkResult;
                 }
             });
         }

@@ -14,9 +14,9 @@ const cookie = require('./middleware/cookie');
 
 
 cookie.setKey('virtual');
-// app.use(cookie.getCookies(cookies=>{
-//     console.log(cookies);
-// }));
+app.use(cookie.getCookies(cookies=>{
+    console.log(cookies);
+}));
 app.use(cookie.setCookie('name', 'siro', {secure: false}));
 app.use(cookie.setSignedCookie('age', '16', {secure: false}));
 app.use((req, res)=>{
