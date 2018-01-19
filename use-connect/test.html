@@ -19,11 +19,10 @@
     <script>
     'use strict';
 
-    // ajax_post('http://localhost:3000/', 'name=siro&age=17', (res)=>{
-    //     console.log(res);
-    // }, (err)=>{
-    //     console.log(err)
-    // });
+    window.addEventListener("contextmenu", function(e) {
+        console.log(5555);
+        e.preventDefault();
+    })
 
     function ajax_get(sURL, fnSuccessCallback, fnFailCallback)
 	{
