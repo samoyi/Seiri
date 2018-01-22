@@ -1,14 +1,26 @@
-const User = require('./modules/User');
+const Koa = require('koa');
+const app = new Koa();
 
-let user = new User('user1');
+const one = async (ctx, next) => {
+  console.log(1);
+  await next();
+  console.log(6);
+}
 
+const two = async (ctx, next) => {
+  console.log(2);
+  await next();
+  console.log(5);
+}
 
-user.addProject('第三个')
-    .then((res)=>{
-        console.log(res);
-    });
+const three = async (ctx, next) => {
+  console.log(3);
+  await next();
+  console.log(4);
+}
 
+app.use(one);
+app.use(two);
+app.use(three);
 
-
-console.log(22);
-console.log(33);
+app.listen(3000);
