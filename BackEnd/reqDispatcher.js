@@ -1,5 +1,8 @@
 const fs = require('fs');
+const Router = require('koa-router');
 
+
+// 向router添加一个controller中的映射
 function addMapping(router, mapping) {
     for (let url in mapping) {
         if(url.startsWith('GET ')){
@@ -18,9 +21,10 @@ function addMapping(router, mapping) {
     }
 }
 
-function addControllers(router, dir) {
+// 加载所有的controller，然后分别调用addMapping把controller中的路由映射添加进router
+function loadControllers(router, dir) {
     const js_files = fs.readdirSync(__dirname + '/' + dir)
-                    .filter((f) => { return f.endsWith('.js'); });
+                        .filter(f=>f.endsWith('.js'));
 
     for (let f of js_files) {
         console.log(`process controller: ${f}...`);
@@ -31,9 +35,10 @@ function addControllers(router, dir) {
 
 
 module.exports = function (dir) {
-    let controllers_dir = dir || 'controllers', // 如果不传参数，扫描目录默认为'controllers'
-        router = require('koa-router')();
-        
-    addControllers(router, controllers_dir);
+    // 如果不传参数，扫描目录默认为'controllers'
+    let controllers_dir = dir || 'controllers',
+        router = new Router();
+
+    loadControllers(router, controllers_dir);
     return router.routes();
 };

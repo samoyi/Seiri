@@ -5,21 +5,72 @@ const fs = require('fs');
 const readFile = promisify(fs.readFile);
 const writeFile = promisify(fs.writeFile);
 
+const sendMail = require('./sendMail');
 
-function allUser(){
-    return fs.readdirSync('./database/projects');
+let aAllUser = fs.readdirSync('./database/users')
+                    .map(filename=>filename.slice(0, -5));
+
+
+function hasUser(sUserID){
+    return aAllUser.includes(sUserID);
 }
 
 class User{
 
     constructor(sUserID){
-        let aAllUser = allUser();
-        if(aAllUser.includes(sUserID + '.json')){
+
+        if(this.hasUser(sUserID)){
             this.userID = sUserID;
         }
 
-        this.fileUrl = './database/projects/' + this.userID + '.json';
+        this.fileUrl = './database/users/' + this.userID + '.json';
     }
+
+    hasUser(sUserID){
+        return aAllUser.includes(sUserID);
+    }
+
+    mailVerification(sEmail){
+        if(true){ // 邮箱正则
+
+        }
+        else{
+            return
+        }
+
+        if(this.hasUser(sEmail)){
+            // sendMail()
+        }
+        else{
+
+        }
+    }
+
+
+    // signIn(sEmail){
+    //     if(this.hasUser(sEmail)){
+    //         let oUser = {
+    //             "email": sEmail,
+    //         };
+    //         this.userID = sEmail;
+    //
+    //         aAllUser.push(oUser);
+    //     }
+    //     else{
+    //
+    //     }
+    // },
+
+    async createUser(){
+        aAllUser.includes()
+        if(fs.existsSync(this.fileUrl)){
+            return JSON.parse( await readFile(this.fileUrl, 'utf8') );
+        }
+        else{ // 根本没有该用户。有用户但没项目是空数组
+            return null;
+        }
+    }
+
 
 
     async getProjects(){

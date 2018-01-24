@@ -1,30 +1,33 @@
-
 const Koa = require('koa');
+const serve = require('koa-static');
+const bodyParser = require('koa-bodyparser');
 const app = new Koa();
 
-// https://github.com/koajs/koa/blob/master/docs/guide.md
 
 app.use(async (ctx, next) => {
-    console.log(1);
-    await next();
     ctx.set('Access-Control-Allow-Origin', 'http://localhost');
-    console.log(5);
-});
-
-app.use(async (ctx, next) => {
-    console.log(2);
     await next();
-    console.log(4);
 });
 
-const rest = require('./rest');
+
+// 返回静态文件
+app.use(serve('static'));
+
+
+// 判断是否是api请求，如果是则添加统一的回应的函数
+const rest = require('./middlewares/forREST');
 app.use(rest.restify());
 
-const bodyParser = require('koa-bodyparser');
+
 app.use(bodyParser());
 
-const controller = require('./controller');
-app.use(controller());
+
+// 根据请求的方法和路径，将不同类型的请求分发至不同的controller
+const dispatcher = require('./reqDispatcher');
+app.use(dispatcher());
+
+
+
 
 app.listen(3000);
 console.log('app started at port 3000...');

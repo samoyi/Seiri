@@ -23,7 +23,7 @@ module.exports = {
         return products;
     },
 
-    getProduct: (id) => {
+    getUser: (id) => {
         var i;
         for (i = 0; i < products.length; i++) {
             if (products[i].id === id) {
