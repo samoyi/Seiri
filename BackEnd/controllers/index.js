@@ -14,11 +14,12 @@ var fn_index = async (ctx, next) => {
         <body>
             <h1>断 舍 离</h1>
             <form action="/signin" method="post">
-                <p>邮箱：<input name="name" value="koa"></p>
-                <p>密码：<input name="password" type="password"></p>
+                <p>邮箱：<input name="name" type="text" value="leening529@163.com"></p>
+                <p>密码：<input name="password" type="password" value="123456qwerty"></p>
                 <p><input type="submit" value="登录"></p>
                 <p><input type="submit" value="注册"></p>
                 <p><input type="submit" value="重置密码"></p>
+                <p>测试密码：123456qwerty</p>
             </form>
             <div>
                 <h2>优点或者缺点</h2>
@@ -60,7 +61,7 @@ var fn_signin = async (ctx, next) => {
     console.log(`signin with name: ${name}, password: ${password}`);
     if (name === 'koa' && password === '12345') {
         ctx.response.body = `<h1>Welcome, ${name}!</h1>`;
-        throw new Error('什么鬼');
+        a
     } else {
         ctx.response.body = `<h1>Login failed!</h1>
         <p><a href="/">Try again</a></p>`;

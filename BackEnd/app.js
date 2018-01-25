@@ -4,6 +4,10 @@ const bodyParser = require('koa-bodyparser');
 const app = new Koa();
 
 
+const errorHandler = require('./middlewares/errorHandler');
+app.use(errorHandler());
+
+
 app.use(async (ctx, next) => {
     ctx.set('Access-Control-Allow-Origin', 'http://localhost');
     await next();
